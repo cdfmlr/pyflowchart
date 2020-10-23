@@ -4,9 +4,9 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='pyflow',
+    name='pyflowchart',
     version='0.0.0',
-    url='https://github.com/cdfmlr/pyflow',
+    url='https://github.com/cdfmlr/pyflowchart',
     license='MIT',
     author='CDFMLR',
     author_email='cdfmlr@outlook.com',

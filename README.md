@@ -1,21 +1,21 @@
-# PyFlow
+# PyFlowchart
 
-PyFlow is a package to:
+PyFlowchart is a package to:
 
 - write flowchart in Python,
 - translate Python source codes into flowchart.
 
-PyFlow produces flowcharts in [flowchart.js](https://github.com/adrai/flowchart.js) flowchart DSL, a widely used flow chart textual representation. It's easy to convert these flowcharts text into a picture via [flowchart.js.org](http://flowchart.js.org), [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart), or some markdown editors. 
+PyFlowchart produces flowcharts in [flowchart.js](https://github.com/adrai/flowchart.js) flowchart DSL, a widely used flow chart textual representation. It's easy to convert these flowcharts text into a picture via [flowchart.js.org](http://flowchart.js.org), [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart), or some markdown editors. 
 
 ## Get PyFlow
 
 ```sh
-$ pip3 install pyflow
+$ pip3 install pyflowchart
 ```
 
 ## Flowchart in Python
 
-PyFlow including [flowchart.js](https://github.com/adrai/flowchart.js#node-types) node types:
+PyFlowchart including [flowchart.js](https://github.com/adrai/flowchart.js#node-types) node types:
 
 - StartNode
 - OperationNode
@@ -29,7 +29,7 @@ Nodes can be connected by `connect()` method (`connect_{yes|no}` for ConditionNo
 Get a Flowchart with your start node and call its `flowchart()` method to generate flowchart.js flowchart DSL：
 
 ```python
-from pyflow import *
+from pyflowchart import *
 
 st = StartNode('a_pyflow_test')
 op = OperationNode('do something')
@@ -78,7 +78,7 @@ P.S. Many Markdown editors (for example, Typora) support this flowchart syntax, 
 
 ## Python to Flowchart
 
-PyFlow can also translate your Python Codes into Flowcharts.
+PyFlowchart can also translate your Python Codes into Flowcharts.
 
 For example, you got a `simple.py`:
 
@@ -92,10 +92,10 @@ def foo(a, b):
     return a + b
 ```
 
-Run pyflow in CLI to generate flowchart code:
+Run PyFlowchart in CLI to generate flowchart code:
 
 ```sh
-$ python3 -m pyflow simple.py
+$ python3 -m pyflowchart simple.py
 
 # output flowchart code.
 ```
@@ -103,7 +103,7 @@ $ python3 -m pyflow simple.py
 Or, in Python
 
 ```python
->>> from pyflow import Flowchart
+>>> from pyflowchart import Flowchart
 >>> with open('simple.py') as f:
 ...     code = f.read()
 ... 

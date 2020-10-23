@@ -11,8 +11,8 @@ import ast
 
 import astunparse
 
-from pyflow.ast_node import *
-from pyflow.flowchart import *
+from pyflowchart.ast_node import *
+from pyflowchart.flowchart import *
 
 
 def flowchart_translate_test(name='流程图测试'):

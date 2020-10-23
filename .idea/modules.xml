@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/pyflow.iml" filepath="$PROJECT_DIR$/pyflow.iml" />
+      <module fileurl="file://$PROJECT_DIR$/pyflowchart.iml" filepath="$PROJECT_DIR$/pyflowchart.iml" />
     </modules>
   </component>
 </project>

@@ -8,8 +8,8 @@ license that can be found in the LICENSE file.
 
 import ast
 
-from pyflow.ast_node import parse
-from pyflow.node import Node, NodesGroup
+from pyflowchart.ast_node import parse
+from pyflowchart.node import Node, NodesGroup
 
 
 class Flowchart(NodesGroup):

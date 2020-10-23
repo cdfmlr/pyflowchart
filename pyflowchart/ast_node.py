@@ -12,7 +12,7 @@ from typing import List
 
 import astunparse
 
-from pyflow.node import *
+from pyflowchart.node import *
 
 
 # TODO: beautify tail connection direction
