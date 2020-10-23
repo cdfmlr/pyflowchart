@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='pyflowchart',
-    version='0.0.0',
+    version='0.0.1',
     url='https://github.com/cdfmlr/pyflowchart',
     license='MIT',
     author='CDFMLR',
