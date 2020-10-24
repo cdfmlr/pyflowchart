@@ -119,6 +119,12 @@ Or, in Python
 
 Modify the generated flowchart code by yourself.
 
+## Reference
+
+- Inspired by [Vatsha/code_to_flowchart](https://github.com/Vatsha/code_to_flowchart)
+- Based on [adrai/flowchart.js](http://flowchart.js.org), [python ast](https://docs.python.org/3/library/ast.html), [simonpercivall/astunparse](https://github.com/simonpercivall/astunparse)
+- [A blog about this project](https://clownote.github.io/2020/10/24/blog/PyFlowchart/)
+
 ## License
 
 Copyright 2020 CDFMLR. All rights reserved.
