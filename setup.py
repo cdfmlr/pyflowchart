@@ -1,11 +1,11 @@
 import setuptools
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+with open("README.md", "rb") as fh:
+    long_description = fh.read().decode("utf-8")
 
 setuptools.setup(
     name='pyflowchart',
-    version='0.0.1',
+    version='0.0.2',
     url='https://github.com/cdfmlr/pyflowchart',
     license='MIT',
     author='CDFMLR',
