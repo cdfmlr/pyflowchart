@@ -153,20 +153,44 @@ def Lagrange(points, simplify_result=True, verbose=False):
         L = simplify(L)
     return L
     """
-#     expr = """
-# def func(a, b):
-#     def nested(c):
-#         if c:
-#             return c()
-#         raise ValueError()
-#     if a > b:
-#         return a
-#     print('b')
-#     """
+    #     expr = """
+    # def func(a, b):
+    #     def nested(c):
+    #         if c:
+    #             return c()
+    #         raise ValueError()
+    #     if a > b:
+    #         return a
+    #     print('b')
+    #     """
     expr_ast = ast.parse(expr)
     p = parse(expr_ast.body)
     flow = Flowchart(p.head).flowchart()
     print(flow)
+
+
+def from_code_test():
+    code = """
+print("start")
+
+def foo():
+    foo = "foo"
+
+class Bar():
+    def buzz(self, f):
+        def g(self):
+            print("g")
+            f(self)
+        return g(self)
+
+Bar().buzz(foo)
+print("end")
+    """
+    # should test:
+    # field="NOTEXIST", field=".", field="Bar.", field="Bar.NOTEXIST"
+    # no field, field="", field="Bar.buzz", field="Bar.buzz.g"
+    flowchart = Flowchart.from_code(code, field="Bar.buzz", inner=True)
+    print(flowchart.flowchart())
 
 
 if __name__ == '__main__':
@@ -177,4 +201,5 @@ if __name__ == '__main__':
     # loop_test()
     # if_test()
     # cond_loop_test()
-    func_test()
+    # func_test()
+    from_code_test()
