@@ -7,7 +7,7 @@ PyFlowchart is a package to:
 
 PyFlowchart produces flowcharts in [flowchart.js](https://github.com/adrai/flowchart.js) flowchart DSL, a widely used flow chart textual representation. It's easy to convert these flowcharts text into a picture via [flowchart.js.org](http://flowchart.js.org), [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart), or some markdown editors. 
 
-## Get PyFlow
+## Get PyFlowchart
 
 ```sh
 $ pip3 install pyflowchart
@@ -115,11 +115,103 @@ Or, in Python
 
 ![result](https://tva1.sinaimg.cn/large/0081Kckwly1gjzgay3158j30py0gj442.jpg)
 
+## Advanced Usages
+
+- Specify a field of code to generate flowchart (new feature: v0.1.0)
+
+```python
+# example.py
+print("start")
+
+def foo():
+    foo = "foo"
+
+class Bar():
+    def buzz(self, f):
+        def g(self):
+            print("g")
+            f(self)
+        return g(self)
+
+Bar().buzz(foo)
+print("end")
+```
+
+To generate a flowchart of `Bar.buzz.g`：
+
+```python
+# Python
+from pyflowchart import Flowchart
+with open('example.py') as f:
+	code = f.read()
+fc = Flowchart.from_code(code, field='Bar.buzz.g', inner=False)
+print(fc.flowchart())
+```
+
+```sh
+# CLI
+python3 -m pyflowchart example.py -f Bar.buzz.g
+```
+
+Output result:
+
+![result](https://tva1.sinaimg.cn/large/0081Kckwly1gl9wdmg9sij30it07xgnm.jpg)
+
+
+The `from_code` is defined as:
+
+```python
+Flowchart.from_code(code, field='', inner=True)
+```
+
+PyFlowchart CLI is a interface for this function:
+
+```sh
+python3 -m pyflowchart [-h] [-f FIELD] [-i] code_file
+```
+
+### field
+
+`field` is the path to a field (i.e. a function) you want to draw flowchart. For `example.py` above, available paths are:
+
+    - "" (means the whole code)
+    - "foo"
+    - "Bar.buzz"
+    - "Bar.buzz.g"
+
+### inner
+
+`inner` controls parser's behaves. Techly, `inner=True` means parsing `field.body`, while `inner=False` parses `[field]`. So, if  `inner=True`, pyflowchart will look into the field, otherwise  it takes field as a node.
+
+![pyflowchart_inner](https://tva1.sinaimg.cn/large/0081Kckwly1gl9xf1uo5fj31d30jr78m.jpg)
+
+For CLI,  adding an argument `-i`  means `inner=True`, else `inner=False`.
+
 ## Beautify Flowcharts
 
 Modify the generated flowchart code by yourself.
 
-## Reference
+## TODO
+
+- [ ] Generate flowchart SVG/HTML.
+
+```sh
+$ pyflowchart example.py -o flowchart.svg
+```
+
+Depends node.js and flowchart.js.
+
+- [ ] PyFlowchart GUI
+
+Well, I guess a **GUI** for PyFlowchart may be remarkable. Pasting your code into it, the flowchart DSL will be generated just in time, and flowchart will be shown aside.
+
+- [ ] The Chinese README your buddies waiting for!
+
+----
+
+Sadly, I am too busy (this word is pronounced as `[ˈlеizi]`——lazy) to code these ideas. Please [submit an issue](https://github.com/cdfmlr/pyflowchart/issues/new) to push me on. Or, PR to make it by yourself. I cannot wait to appreciate your great contribution!
+
+## References
 
 - Inspired by [Vatsha/code_to_flowchart](https://github.com/Vatsha/code_to_flowchart)
 - Based on [adrai/flowchart.js](http://flowchart.js.org), [python ast](https://docs.python.org/3/library/ast.html), [simonpercivall/astunparse](https://github.com/simonpercivall/astunparse)
