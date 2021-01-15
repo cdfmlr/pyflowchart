@@ -33,7 +33,7 @@ def detect_decode(file_content: bytes) -> str:
     """
     # detect encoding
     detect_result = chardet.detect(file_content)
-    print("DEBUG detect_result =", detect_result)
+    # print("DEBUG detect_result =", detect_result)
 
     encoding = detect_result.get("encoding")
     confidence = detect_result.get("confidence")
