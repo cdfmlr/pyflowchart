@@ -5,7 +5,7 @@ with open("README.md", "rb") as fh:
 
 setuptools.setup(
     name='pyflowchart',
-    version='0.1.0',
+    version='0.1.1',
     url='https://github.com/cdfmlr/pyflowchart',
     license='MIT',
     author='CDFMLR',
@@ -23,5 +23,5 @@ setuptools.setup(
         "Topic :: Utilities",
     ],
     python_requires='>=3.6',
-    install_requires=['astunparse'],
+    install_requires=['astunparse', 'chardet'],
 )
