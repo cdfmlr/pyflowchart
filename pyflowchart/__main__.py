@@ -50,13 +50,13 @@ def detect_decode(file_content: bytes) -> str:
     return content
 
 
-def main(code_file, field, inner):
+def main(code_file, field, inner, simplify):
     # read file content: binary
     file_content: bytes = code_file.read()
     # detect encoding and decode file content by detected encoding
     code = detect_decode(file_content)
 
-    flowchart = Flowchart.from_code(code, field=field, inner=inner)
+    flowchart = Flowchart.from_code(code, field=field, inner=inner, simplify=simplify)
     print(flowchart.flowchart())
 
 
@@ -68,10 +68,11 @@ if __name__ == '__main__':
 
     parser.add_argument('-f', '--field', default="", type=str, help="field to draw flowchart. (e.g. Class.method)")
     parser.add_argument('-i', '--inner', action="store_true", help="parse the body of field")
+    parser.add_argument('--no-simplify', action="store_false", help="do not simplify the one-line-body If/Loop")
 
     args = parser.parse_args()
 
     if not args.field:  # field="", parse the whole file (ast Module), should use the body
         args.inner = True
 
-    main(args.code_file, args.field, args.inner)
+    main(args.code_file, args.field, args.inner, args.no_simplify)

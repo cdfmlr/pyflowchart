@@ -68,7 +68,7 @@ print(c)
     """
     expr_ast = ast.parse(expr)
     p = parse(expr_ast.body)
-    flow = Flowchart(p.head_node).flowchart()
+    flow = Flowchart(p.head).flowchart()
     print(flow)
 
 
@@ -193,6 +193,23 @@ print("end")
     print(flowchart.flowchart())
 
 
+def simplify_on_off():
+    code = """
+a = 1
+if a == 1:
+    print(a)
+while a < 4:
+    a = a + 1
+    """
+    print("------(default) simplify=True:")
+    flowchart = Flowchart.from_code(code, field="", inner=True)
+    print(flowchart.flowchart())
+
+    print("------simplify=False:")
+    flowchart = Flowchart.from_code(code, field="", inner=True, simplify=False)
+    print(flowchart.flowchart())
+
+
 if __name__ == '__main__':
     # flowchart_translate_test()
     # ast_unparser_test()
@@ -202,4 +219,5 @@ if __name__ == '__main__':
     # if_test()
     # cond_loop_test()
     # func_test()
-    from_code_test()
+    # from_code_test()
+    simplify_on_off()

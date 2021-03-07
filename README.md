@@ -117,7 +117,27 @@ Or, in Python
 
 ## Advanced Usages
 
-- Specify a field of code to generate flowchart (new feature: v0.1.0)
+As mentioned above, we use `Flowchart.from_code` to translate Python code into Flowchart. The `from_code` is defined as:
+
+```python
+Flowchart.from_code(code, field='', inner=True, simplify=True)
+```
+
+PyFlowchart CLI is a 1:1 interface for this function:
+
+```sh
+python3 -m pyflowchart [-f FIELD] [-i] [--no-simplify] code_file
+```
+
+Let's talk about those three args:
+
+- `field`: Specify a field of code to generate flowchart
+- `inner`: True: parse the body of field; Field: parse the body as a object
+- `simplify`: for If & Loop statements: simplify the one-line-body or not
+
+### field
+
+`field` is the path to a field (i.e. a function) you want to draw flowchart. 
 
 ```python
 # example.py
@@ -136,6 +156,13 @@ class Bar():
 Bar().buzz(foo)
 print("end")
 ```
+
+For `example.py` above, available paths are:
+
+    - "" (means the whole code)
+    - "foo"
+    - "Bar.buzz"
+    - "Bar.buzz.g"
 
 To generate a flowchart of `Bar.buzz.g`：
 
@@ -157,28 +184,6 @@ Output result:
 
 ![result](https://tva1.sinaimg.cn/large/0081Kckwly1gl9wdmg9sij30it07xgnm.jpg)
 
-
-The `from_code` is defined as:
-
-```python
-Flowchart.from_code(code, field='', inner=True)
-```
-
-PyFlowchart CLI is a interface for this function:
-
-```sh
-python3 -m pyflowchart [-h] [-f FIELD] [-i] code_file
-```
-
-### field
-
-`field` is the path to a field (i.e. a function) you want to draw flowchart. For `example.py` above, available paths are:
-
-    - "" (means the whole code)
-    - "foo"
-    - "Bar.buzz"
-    - "Bar.buzz.g"
-
 ### inner
 
 `inner` controls parser's behaves. Techly, `inner=True` means parsing `field.body`, while `inner=False` parses `[field]`. So, if  `inner=True`, pyflowchart will look into the field, otherwise  it takes field as a node.
@@ -186,6 +191,41 @@ python3 -m pyflowchart [-h] [-f FIELD] [-i] code_file
 ![pyflowchart_inner](https://tva1.sinaimg.cn/large/0081Kckwly1gl9xf1uo5fj31d30jr78m.jpg)
 
 For CLI,  adding an argument `-i`  means `inner=True`, else `inner=False`.
+
+### simplify
+
+simplify is for If & Loop statements: simplify the one-line-body.
+
+For example:
+
+```python
+# example_simplify.py
+a = 1
+if a == 1:
+    print(a)
+while a < 4:
+    a = a + 1
+```
+
+- Default: `simplify=True`:
+
+```python
+flowchart = Flowchart.from_code(example_simplify_py, field="", inner=True)
+print(flowchart.flowchart())
+# CLI $ p3 -m pyflowchart example_simplify.py 
+```
+
+![simplify result](./doc/simplify.png)
+
+- `simplify=False`:
+
+```python
+flowchart = Flowchart.from_code(example_simplify_py, field="", inner=True, simplify=False)
+print(flowchart.flowchart())
+# CLI $ p3 -m pyflowchart --no-simplify example_simplify.py 
+```
+
+![no simplify result](./doc/no-simplify.png)
 
 ## Beautify Flowcharts
 
