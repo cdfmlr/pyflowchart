@@ -22,7 +22,7 @@ class AstNode(Node):
     """AstNode is nodes from AST
     """
 
-    def __init__(self, ast_object: _ast.AST):
+    def __init__(self, ast_object: _ast.AST, **kwargs):
         Node.__init__(self)
         self.ast_object = ast_object
 
@@ -38,12 +38,13 @@ class AstConditionNode(AstNode, ConditionNode):
     AstConditionNode is a ConditionNode for _ast.For | _ast.While | _ast.If ({for|while|if}-sentence in code)
     """
 
-    def __init__(self, ast_cond: _ast.stmt):
+    def __init__(self, ast_cond: _ast.stmt, **kwargs):
         """
         Args:
             ast_cond: instance of _ast.For or _ast.While or _ast.If
+            **kwargs: None
         """
-        AstNode.__init__(self, ast_cond)
+        AstNode.__init__(self, ast_cond, **kwargs)
         ConditionNode.__init__(self, cond=self.cond_expr())
 
     def cond_expr(self) -> str:
@@ -78,8 +79,8 @@ class FunctionDefStart(AstNode, StartNode):
     standing for the start of a function.
     """
 
-    def __init__(self, ast_function_def: _ast.FunctionDef):
-        AstNode.__init__(self, ast_function_def)
+    def __init__(self, ast_function_def: _ast.FunctionDef, **kwargs):
+        AstNode.__init__(self, ast_function_def, **kwargs)
         StartNode.__init__(self, ast_function_def.name)
 
 
@@ -89,8 +90,8 @@ class FunctionDefEnd(AstNode, EndNode):
      standing for the end of a function.
     """
 
-    def __init__(self, ast_function_def: _ast.FunctionDef):
-        AstNode.__init__(self, ast_function_def)
+    def __init__(self, ast_function_def: _ast.FunctionDef, **kwargs):
+        AstNode.__init__(self, ast_function_def, **kwargs)
         EndNode.__init__(self, ast_function_def.name)
 
 
@@ -100,8 +101,8 @@ class FunctionDefArgsInput(AstNode, InputOutputNode):
     standing for the args (input) of a function.
     """
 
-    def __init__(self, ast_function_def: _ast.FunctionDef):
-        AstNode.__init__(self, ast_function_def)
+    def __init__(self, ast_function_def: _ast.FunctionDef, **kwargs):
+        AstNode.__init__(self, ast_function_def, **kwargs)
         InputOutputNode.__init__(self, InputOutputNode.INPUT, self.func_args_str())
 
     def func_args_str(self):
@@ -120,18 +121,21 @@ class FunctionDef(NodesGroup, AstNode):
     This class is a NodesGroup with FunctionDefStart & FunctionDefArgsInput & function-body & FunctionDefEnd.
     """
 
-    def __init__(self, ast_func: _ast.FunctionDef):  # _ast.For | _ast.While
+    def __init__(self, ast_func: _ast.FunctionDef, **kwargs):  # _ast.For | _ast.While
         """
         FunctionDef.__init__ makes a NodesGroup object with following Nodes chain:
             FunctionDef -> FunctionDefStart -> FunctionDefArgsInput -> [function-body] -> FunctionDefEnd
+
+        Args:
+            **kwargs: None
         """
-        AstNode.__init__(self, ast_func)
+        AstNode.__init__(self, ast_func, **kwargs)
 
         # get nodes
-        self.func_start = FunctionDefStart(ast_func)
-        self.func_args_input = FunctionDefArgsInput(ast_func)
+        self.func_start = FunctionDefStart(ast_func, **kwargs)
+        self.func_args_input = FunctionDefArgsInput(ast_func, **kwargs)
         self.body_head, self.body_tails = self.parse_func_body()
-        self.func_end = FunctionDefEnd(ast_func)
+        self.func_end = FunctionDefEnd(ast_func, **kwargs)
 
         # connect
         self.func_start.connect(self.func_args_input)
@@ -194,13 +198,20 @@ class Loop(NodesGroup, AstNode):
     This class is a NodesGroup that connects to LoopCondition & loop-body.
     """
 
-    def __init__(self, ast_loop: _ast.stmt):  # _ast.For | _ast.While
+    def __init__(self, ast_loop: _ast.stmt, **kwargs):  # _ast.For | _ast.While
         """
         Construct Loop object will make following Node chain:
             Loop -> LoopCondition -> (yes) -> LoopCondition
                                   -> (no)  -> <next_node>
+
+        Args:
+            **kwargs:
+
+                simplify={True | False}: simplify the one_line_body case?
+                                           (Default: True)
+                                           See self.simplify
         """
-        AstNode.__init__(self, ast_loop)
+        AstNode.__init__(self, ast_loop, **kwargs)
 
         self.cond_node = LoopCondition(ast_loop)
 
@@ -210,7 +221,8 @@ class Loop(NodesGroup, AstNode):
 
         self._virtual_no_tail()
 
-        self.simplify()
+        if kwargs.get("simplify", True):
+            self.simplify()
 
     def parse_loop_body(self) -> None:
         """
@@ -326,13 +338,20 @@ class If(NodesGroup, AstNode):
     This class is a NodesGroup that connects to IfCondition & if-body & else-body.
     """
 
-    def __init__(self, ast_if: _ast.If):
+    def __init__(self, ast_if: _ast.If, **kwargs):
         """
         Construct If object will make following Node chain:
             If -> IfCondition -> (yes) -> yes-path
                               -> (no)  -> no-path
+
+        Args:
+            **kwargs:
+
+                simplify={True | False}: simplify the one_line_body case?
+                                           (Default: True)
+                                           See self.simplify
         """
-        AstNode.__init__(self, ast_if)
+        AstNode.__init__(self, ast_if, **kwargs)
 
         self.cond_node = IfCondition(ast_if)
 
@@ -341,8 +360,8 @@ class If(NodesGroup, AstNode):
         self.parse_if_body()
         self.parse_else_body()
 
-        # TODO: let use choice simplify or not
-        self.simplify()
+        if kwargs.get("simplify", True):
+            self.simplify()
 
     def parse_if_body(self) -> None:
         """
@@ -416,8 +435,8 @@ class CommonOperation(AstNode, OperationNode):
     CommonOperation is an OperationNode for any _ast.AST (any sentence in python source code)
     """
 
-    def __init__(self, ast_object: _ast.AST):
-        AstNode.__init__(self, ast_object)
+    def __init__(self, ast_object: _ast.AST, **kwargs):
+        AstNode.__init__(self, ast_object, **kwargs)
         OperationNode.__init__(self, operation=self.ast_to_source())
 
 
@@ -426,8 +445,8 @@ class CallSubroutine(AstNode, SubroutineNode):
     CallSubroutine is an SubroutineNode for _ast.Call (function call sentence in source)
     """
 
-    def __init__(self, ast_call: _ast.Call):
-        AstNode.__init__(self, ast_call)
+    def __init__(self, ast_call: _ast.Call, **kwargs):
+        AstNode.__init__(self, ast_call, **kwargs)
         SubroutineNode.__init__(self, self.ast_to_source())
 
 
@@ -443,8 +462,8 @@ class BreakContinueSubroutine(AstNode, SubroutineNode):
 
     # TODO: Including information about the LoopCondition that is to be break/continue.
 
-    def __init__(self, ast_break_continue: _ast.stmt):  # Break & Continue is subclass of stmt
-        AstNode.__init__(self, ast_break_continue)
+    def __init__(self, ast_break_continue: _ast.stmt, **kwargs):  # Break & Continue is subclass of stmt
+        AstNode.__init__(self, ast_break_continue, **kwargs)
         SubroutineNode.__init__(self, self.ast_to_source())
 
     def connect(self, sub_node) -> None:
@@ -457,8 +476,8 @@ class YieldOutput(AstNode, InputOutputNode):
      YieldOutput is a InputOutputNode (Output) for _ast.Yield (yield sentence in python source code)
     """
 
-    def __init__(self, ast_return: _ast.Return):
-        AstNode.__init__(self, ast_return)
+    def __init__(self, ast_return: _ast.Return, **kwargs):
+        AstNode.__init__(self, ast_return, **kwargs)
         InputOutputNode.__init__(self, InputOutputNode.OUTPUT, self.ast_to_source())
 
 
@@ -471,8 +490,8 @@ class ReturnOutput(AstNode, InputOutputNode):
      ReturnOutput is a InputOutputNode (Output) for _ast.Return (return sentence in python source code)
     """
 
-    def __init__(self, ast_return: _ast.Return):
-        AstNode.__init__(self, ast_return)
+    def __init__(self, ast_return: _ast.Return, **kwargs):
+        AstNode.__init__(self, ast_return, **kwargs)
         InputOutputNode.__init__(self, InputOutputNode.OUTPUT, self.ast_to_source().lstrip("return"))
 
 
@@ -481,8 +500,8 @@ class ReturnEnd(AstNode, EndNode):
     ReturnEnd is a EndNode for _ast.Return (return sentence in python source code)
     """
 
-    def __init__(self, ast_return: _ast.Return):
-        AstNode.__init__(self, ast_return)
+    def __init__(self, ast_return: _ast.Return, **kwargs):
+        AstNode.__init__(self, ast_return, **kwargs)
         EndNode.__init__(self, "function return")  # TODO: the returning function name
 
 
@@ -493,23 +512,26 @@ class Return(NodesGroup, AstNode):
     This class is a invisible virtual Node (i.e. NodesGroup) that connects to ReturnOutput & ReturnEnd.
     """
 
-    def __init__(self, ast_return: _ast.Return):
+    def __init__(self, ast_return: _ast.Return, **kwargs):
         """
         Construct Return object will make following Node chain:
             Return -> ReturnOutput -> ReturnEnd
         Giving return sentence without return-values, the ReturnOutput will be omitted: (Return -> ReturnEnd)
+
+        Args:
+            **kwargs: None
         """
-        AstNode.__init__(self, ast_return)
+        AstNode.__init__(self, ast_return, **kwargs)
 
         self.output_node = None
         self.end_node = None
 
         self.head = None
 
-        self.end_node = ReturnEnd(ast_return)
+        self.end_node = ReturnEnd(ast_return, **kwargs)
         self.head = self.end_node
         if ast_return.value:
-            self.output_node = ReturnOutput(ast_return)
+            self.output_node = ReturnOutput(ast_return, **kwargs)
             self.output_node.connect(self.end_node)
             self.head = self.output_node
 
@@ -577,12 +599,14 @@ class ParseProcessGraph(NodesGroup):
     pass
 
 
-def parse(ast_list: List[_ast.AST]) -> ParseProcessGraph:
+def parse(ast_list: List[_ast.AST], **kwargs) -> ParseProcessGraph:
     """
     parse a ast_list (from _ast.Module/FunctionDef/For/If/etc.body)
 
     Args:
         ast_list: a list of _ast.AST object
+        **kwargs:
+            - simplify: for If & Loop: simplify the one line body case
 
     Returns:
         ParseGraph
@@ -606,7 +630,7 @@ def parse(ast_list: List[_ast.AST]) -> ParseProcessGraph:
 
         assert issubclass(ast_node_class, AstNode)
 
-        node = ast_node_class(ast_object)
+        node = ast_node_class(ast_object, **kwargs)
 
         if head_node is None:  # is the first node
             head_node = node
