@@ -134,7 +134,7 @@ class FunctionDef(NodesGroup, AstNode):
         # get nodes
         self.func_start = FunctionDefStart(ast_func, **kwargs)
         self.func_args_input = FunctionDefArgsInput(ast_func, **kwargs)
-        self.body_head, self.body_tails = self.parse_func_body()
+        self.body_head, self.body_tails = self.parse_func_body(**kwargs)
         self.func_end = FunctionDefEnd(ast_func, **kwargs)
 
         # connect
@@ -146,7 +146,7 @@ class FunctionDef(NodesGroup, AstNode):
 
         NodesGroup.__init__(self, self.func_start, [self.func_end])
 
-    def parse_func_body(self) -> Tuple[Node, List[Node]]:
+    def parse_func_body(self, **kwargs) -> Tuple[Node, List[Node]]:
         """
         parse function body.
 
@@ -155,7 +155,7 @@ class FunctionDef(NodesGroup, AstNode):
             - body_head
             - body_tails
         """
-        p = parse(self.ast_object.body)
+        p = parse(self.ast_object.body, **kwargs)
         return p.head, p.tails
 
 
@@ -217,21 +217,21 @@ class Loop(NodesGroup, AstNode):
 
         NodesGroup.__init__(self, self.cond_node)
 
-        self.parse_loop_body()
+        self.parse_loop_body(**kwargs)
 
         self._virtual_no_tail()
 
         if kwargs.get("simplify", True):
             self.simplify()
 
-    def parse_loop_body(self) -> None:
+    def parse_loop_body(self, **kwargs) -> None:
         """
         Parse and Connect loop-body (a node graph) to self.cond_node (LoopCondition), extend self.tails with tails got.
         """
-        progress = parse(self.ast_object.body)
+        progress = parse(self.ast_object.body, **kwargs)
 
         if progress.head is not None:
-            process = parse(self.ast_object.body)
+            process = parse(self.ast_object.body, **kwargs)
             # head
             self.cond_node.connect_yes(process.head)
             # tails connect back to cond
@@ -357,17 +357,17 @@ class If(NodesGroup, AstNode):
 
         NodesGroup.__init__(self, self.cond_node)
 
-        self.parse_if_body()
-        self.parse_else_body()
+        self.parse_if_body(**kwargs)
+        self.parse_else_body(**kwargs)
 
         if kwargs.get("simplify", True):
             self.simplify()
 
-    def parse_if_body(self) -> None:
+    def parse_if_body(self, **kwargs) -> None:
         """
         Parse and Connect if-body (a node graph) to self.cond_node (IfCondition).
         """
-        progress = parse(self.ast_object.body)
+        progress = parse(self.ast_object.body, **kwargs)
 
         if progress.head is not None:
             self.cond_node.connect_yes(progress.head)
@@ -382,11 +382,11 @@ class If(NodesGroup, AstNode):
 
             self.append_tails(virtual_yes)
 
-    def parse_else_body(self) -> None:
+    def parse_else_body(self, **kwargs) -> None:
         """
         Parse and Connect else-body (a node graph) to self.cond_node (IfCondition).
         """
-        progress = parse(self.ast_object.orelse)
+        progress = parse(self.ast_object.orelse, **kwargs)
 
         if progress.head is not None:
             self.cond_node.connect_no(progress.head)
