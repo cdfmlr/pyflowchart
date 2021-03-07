@@ -8,7 +8,7 @@ license that can be found in the LICENSE file.
 """
 
 import _ast
-from typing import List
+from typing import List, Tuple
 
 import astunparse
 
@@ -142,7 +142,7 @@ class FunctionDef(NodesGroup, AstNode):
 
         NodesGroup.__init__(self, self.func_start, [self.func_end])
 
-    def parse_func_body(self) -> (Node, List[Node]):
+    def parse_func_body(self) -> Tuple[Node, List[Node]]:
         """
         parse function body.
 
