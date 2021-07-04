@@ -10,12 +10,18 @@ license that can be found in the LICENSE file.
 
 import time
 import uuid
+import itertools    # for count
 
 
 class Node(object):
     """Node is a abstract class for kinds of flowchart node.
     """
     node_type = 'node'  # flowchart.js Node Syntax: nodeType
+
+    # object id: an iterator
+    # each entities call next(self._node_id) to get an ID.
+    # XXX: I am not fully sure that this is thread-safe.
+    _node_id = itertools.count(0)
 
     def __init__(self):
         self.node_name = ''  # flowchart.js Node Syntax: nodeName
@@ -25,6 +31,8 @@ class Node(object):
         self.connect_direction = None  # custom thisNode(connect_direction)->nextNode
 
         self.__visited = None
+
+        self.id = next(self._node_id)
 
     def fc_definition(self) -> str:
         """fc_definition returns the flowchart.js node definition string of current Node  (self only, subs excepted).
@@ -224,7 +232,7 @@ class StartNode(Node):
 
     def __init__(self, name: str):
         super().__init__()
-        self.node_name = f'st{id(self)}'
+        self.node_name = f'st{self.id}'
         self.node_text = f'start {name}'
 
 
@@ -235,7 +243,7 @@ class EndNode(Node):
 
     def __init__(self, name: str):
         super().__init__()
-        self.node_name = f'e{id(self)}'
+        self.node_name = f'e{self.id}'
         self.node_text = f'end {name}'
 
 
@@ -246,7 +254,7 @@ class OperationNode(Node):
 
     def __init__(self, operation: str):
         super().__init__()
-        self.node_name = f'op{id(self)}'
+        self.node_name = f'op{self.id}'
         self.node_text = f'{operation}'
 
 
@@ -260,7 +268,7 @@ class InputOutputNode(Node):
 
     def __init__(self, input_or_output: str, content: str):
         super().__init__()
-        self.node_name = f'io{id(self)}'
+        self.node_name = f'io{self.id}'
         self.node_text = f'{input_or_output}: {content}'
 
 
@@ -271,7 +279,7 @@ class SubroutineNode(Node):
 
     def __init__(self, subroutine: str):
         super().__init__()
-        self.node_name = f'sub{id(self)}'
+        self.node_name = f'sub{self.id}'
         self.node_text = f'{subroutine}'
 
 
@@ -282,7 +290,7 @@ class ConditionNode(Node):
 
     def __init__(self, cond: str):
         super().__init__()
-        self.node_name = f'cond{id(self)}'
+        self.node_name = f'cond{self.id}'
         self.node_text = f'{cond}'
 
         self.connection_yes = None
