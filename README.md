@@ -13,9 +13,29 @@ PyFlowchart produces flowcharts in [flowchart.js](https://github.com/adrai/flowc
 $ pip3 install pyflowchart
 ```
 
+## Quick Start
+
+To flowchartlize your python codes in `example.py`，run:
+
+```sh
+$ python3 -m pyflowchart example.py
+```
+
+PyFlowchart will output the generated flowchart.js DSL. Go http://flowchart.js.org or use editors like [Typora](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts) to turns the output code into a rendered diagram.
+
+To specify a function (or a method in a class) to flowchartlize:
+
+```sh
+$ python3 -m pyflowchart example.py -f function_name
+# or
+$ python3 -m pyflowchart example.py -f ClassName.method_name
+```
+
 ## Flowchart in Python
 
-PyFlowchart including [flowchart.js](https://github.com/adrai/flowchart.js#node-types) node types:
+PyFlowchart allows you to write a flowchart in Python which could be automatically translated into [flowchart.js](https://github.com/adrai/flowchart.js) flowchart DSL.
+
+PyFlowchart supports [flowchart.js](https://github.com/adrai/flowchart.js#node-types) node types:
 
 - StartNode
 - OperationNode
@@ -70,11 +90,11 @@ cond4471501392(no)->sub4471501584
 sub4471501584(right)->op4471442064
 ```
 
-Go http://flowchart.js.org and translate the generated textual representation into SVG flow chart diagrams:
+Then you can visit http://flowchart.js.org and translate the generated textual representation into SVG flow chart diagrams:
 
 ![screenshot on flowchart.js page](https://tva1.sinaimg.cn/large/0081Kckwly1gjzforbn9vj30z00lv12f.jpg)
 
-P.S. Many Markdown editors (for example, Typora) support this flowchart syntax, too. And if you prefer CLI, see [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart).
+P.S. Many Markdown editors (for example, Typora) support this flowchart syntax, too (refer [Typora doc about flowchart](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts)). And if you prefer CLI, see [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart).
 
 ## Python to Flowchart
 
@@ -131,9 +151,9 @@ python3 -m pyflowchart [-f FIELD] [-i] [--no-simplify] code_file
 
 Let's talk about those three args:
 
-- `field`: Specify a field of code to generate flowchart
-- `inner`: True: parse the body of field; Field: parse the body as a object
-- `simplify`: for If & Loop statements: simplify the one-line-body or not
+- `field`: str: Specify a field of code to generate flowchart
+- `inner`: bool:  `True` to parse the body of field; whereas `False` to parse the body as an single object.
+- `simplify`: bool: for If & Loop statements: simplify the one-line-body or not
 
 ### field
 
@@ -229,11 +249,11 @@ print(flowchart.flowchart())
 
 ## Beautify Flowcharts
 
-Modify the generated flowchart code by yourself.
+Sometimes, the generated flowchart is awful. In that case, you are encouraged to modify the generated flowchart code by yourself OR consider making your python source code at bottom more clear if it's exceedingly complex.
 
 ## TODO
 
-- [ ] Generate flowchart SVG/HTML.
+- [ ] Directly generate flowchart SVG/HTML:
 
 ```sh
 $ pyflowchart example.py -o flowchart.svg
@@ -245,11 +265,11 @@ Depends node.js and flowchart.js.
 
 Well, I guess a **GUI** for PyFlowchart may be remarkable. Pasting your code into it, the flowchart DSL will be generated just in time, and flowchart will be shown aside.
 
-- [ ] The Chinese README your buddies waiting for!
+- [ ] ~~The Chinese README your buddies waiting for!~~ 希望有大佬帮助贡献个中文 README 呀。
 
 ----
 
-Sadly, I am too busy (this word is pronounced as `[ˈlеizi]`——lazy) to code these ideas. Please [submit an issue](https://github.com/cdfmlr/pyflowchart/issues/new) to push me on. Or, PR to make it by yourself. I cannot wait to appreciate your great contribution!
+Sadly, I am too busy (pronounced as `[ˈlеizi]`——lazy) to code these ideas. Please [submit an issue](https://github.com/cdfmlr/pyflowchart/issues/new) to push me on. Or, PR to make it by yourself. I cannot wait to appreciate your great contribution!
 
 ## References
 
