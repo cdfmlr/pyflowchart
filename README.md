@@ -2,8 +2,8 @@
 
 PyFlowchart is a package to:
 
-- write flowchart in Python,
-- translate Python source codes into flowchart.
+- write flowcharts in the Python language,
+- translate Python source codes into flowcharts.
 
 PyFlowchart produces flowcharts in [flowchart.js](https://github.com/adrai/flowchart.js) flowchart DSL, a widely used flow chart textual representation. It's easy to convert these flowcharts text into a picture via [flowchart.js.org](http://flowchart.js.org), [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart), or some markdown editors. 
 
@@ -31,9 +31,13 @@ $ python3 -m pyflowchart example.py -f function_name
 $ python3 -m pyflowchart example.py -f ClassName.method_name
 ```
 
+🎉 Now you are ready to enjoy the flowchartlization.
+
+Keep reading this document to learn more usages.
+
 ## Flowchart in Python
 
-PyFlowchart allows you to write a flowchart in Python which could be automatically translated into [flowchart.js](https://github.com/adrai/flowchart.js) flowchart DSL.
+PyFlowchart allows you to write a flowchart in Python which could be translated into the [flowchart.js](https://github.com/adrai/flowchart.js) DSL automatically.
 
 PyFlowchart supports [flowchart.js](https://github.com/adrai/flowchart.js#node-types) node types:
 
@@ -94,7 +98,7 @@ Then you can visit http://flowchart.js.org and translate the generated textual r
 
 ![screenshot on flowchart.js page](https://tva1.sinaimg.cn/large/0081Kckwly1gjzforbn9vj30z00lv12f.jpg)
 
-P.S. Many Markdown editors (for example, Typora) support this flowchart syntax, too (refer [Typora doc about flowchart](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts)). And if you prefer CLI, see [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart).
+P.S. Many Markdown editors (for example, Typora) support this flowchart syntax, too (reference: [Typora doc about flowchart](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts)). And if you prefer CLI, see [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart).
 
 ## Python to Flowchart
 
@@ -137,7 +141,7 @@ Or, in Python
 
 ## Advanced Usages
 
-As mentioned above, we use `Flowchart.from_code` to translate Python code into Flowchart. The `from_code` is defined as:
+As mentioned above, we use `Flowchart.from_code` to translate Python codes into Flowcharts. The `from_code` is defined as:
 
 ```python
 Flowchart.from_code(code, field='', inner=True, simplify=True)
@@ -151,13 +155,13 @@ python3 -m pyflowchart [-f FIELD] [-i] [--no-simplify] code_file
 
 Let's talk about those three args:
 
-- `field`: str: Specify a field of code to generate flowchart
-- `inner`: bool:  `True` to parse the body of field; whereas `False` to parse the body as an single object.
+- `field`: str: Specify a field of code to generate a flowchart
+- `inner`: bool:  `True` to parse the body of field; whereas `False` to parse the body as a single object.
 - `simplify`: bool: for If & Loop statements: simplify the one-line-body or not
 
 ### field
 
-`field` is the path to a field (i.e. a function) you want to draw flowchart. 
+the `field` is the path to a field (i.e. a function) you want to draw a flowchart. 
 
 ```python
 # example.py
@@ -206,7 +210,7 @@ Output result:
 
 ### inner
 
-`inner` controls parser's behaves. Techly, `inner=True` means parsing `field.body`, while `inner=False` parses `[field]`. So, if  `inner=True`, pyflowchart will look into the field, otherwise  it takes field as a node.
+`inner` controls parser's behaving. Techly, `inner=True` means parsing `field.body`, while `inner=False` parses `[field]`. So, if  `inner=True`, pyflowchart will look into the field, otherwise, it takes the `field` as a node.
 
 ![pyflowchart_inner](https://tva1.sinaimg.cn/large/0081Kckwly1gl9xf1uo5fj31d30jr78m.jpg)
 
@@ -259,11 +263,11 @@ Sometimes, the generated flowchart is awful. In that case, you are encouraged to
 $ pyflowchart example.py -o flowchart.svg
 ```
 
-Depends node.js and flowchart.js.
+Depends on `node.js` and `flowchart.js`.
 
 - [ ] PyFlowchart GUI
 
-Well, I guess a **GUI** for PyFlowchart may be remarkable. Pasting your code into it, the flowchart DSL will be generated just in time, and flowchart will be shown aside.
+Well, I guess a **GUI** for PyFlowchart may be remarkable. Pasting your code into it, the flowchart DSL will be generated just in time, and the flowchart will be shown aside.
 
 - [ ] ~~The Chinese README your buddies waiting for!~~ 希望有大佬帮助贡献个中文 README 呀。
 
