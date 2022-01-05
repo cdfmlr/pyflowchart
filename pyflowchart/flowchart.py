@@ -31,7 +31,7 @@ class Flowchart(NodesGroup):
 
         Recursively get definitions & connections of current Node (self) and
          all of its connections (sub Node) encountered,
-         after which join everything together, returns an whole flowchart DSL as string.
+         after which join everything together, returns the whole flowchart DSL as string.
 
         Returns:
             a flowchart.js DSL string including node definitions & connections
@@ -48,13 +48,13 @@ class Flowchart(NodesGroup):
 
             code:  str,  Python code to draw flowchart
             field: str,  path to field (function) you want to draw flowchart
-            inner: bool, True: parse the body of field; Field: parse the body as a object
+            inner: bool, True: parse the body of field; Field: parse the body as an object
             simplify: bool, for If & Loop statements: simplify the one-line-body or not.
 
         Returns:
             A Flowchart instance parsed from given code.
 
-        `inner=True` means parse field.body, otherwise parse [field]. E.g.
+        `inner=True` means parse `field.body`, otherwise parse [field]. E.g.
 
         ```
         def a():
