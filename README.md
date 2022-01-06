@@ -79,24 +79,26 @@ print(fc.flowchart())
 Output:
 
 ```
-st4471442960=>start: start a_pyflow_test
-op4471442064=>operation: do something
-cond4471501392=>condition: Yes or No?
-io4471501648=>inputoutput: output: something...
-e4471501904=>end: end a_pyflow_test
-sub4471501584=>subroutine: A Subroutine
+st0=>start: start a_pyflow_test
+op1=>operation: do something
+cond2=>condition: Yes or No?
+io3=>inputoutput: output: something...
+e5=>end: end a_pyflow_test
+sub4=>subroutine: A Subroutine
 
-st4471442960->op4471442064
-op4471442064->cond4471501392
-cond4471501392(yes)->io4471501648
-io4471501648->e4471501904
-cond4471501392(no)->sub4471501584
-sub4471501584(right)->op4471442064
+st0->op1
+op1->cond2
+cond2->
+cond2->
+cond2(yes)->io3
+io3->e5
+cond2(no)->sub4
+sub4(right)->op1
 ```
 
 Then you can visit http://flowchart.js.org and translate the generated textual representation into SVG flow chart diagrams:
 
-![screenshot on flowchart.js page](https://tva1.sinaimg.cn/large/0081Kckwly1gjzforbn9vj30z00lv12f.jpg)
+![screenshot on flowchart.js page](docs/imgs/flowchart-js-org.png)
 
 P.S. Many Markdown editors (for example, Typora) support this flowchart syntax, too (reference: [Typora doc about flowchart](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts)). And if you prefer CLI, see [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart).
 
@@ -137,7 +139,7 @@ Or, in Python
 # output flowchart code.
 ```
 
-![result](https://tva1.sinaimg.cn/large/0081Kckwly1gjzgay3158j30py0gj442.jpg)
+![simple.py to flowchart](docs/imgs/py-to-flowchart.png)
 
 ## Advanced Usages
 
@@ -199,6 +201,8 @@ fc = Flowchart.from_code(code, field='Bar.buzz.g', inner=False)
 print(fc.flowchart())
 ```
 
+Or:
+
 ```sh
 # CLI
 python3 -m pyflowchart example.py -f Bar.buzz.g
@@ -206,13 +210,13 @@ python3 -m pyflowchart example.py -f Bar.buzz.g
 
 Output result:
 
-![result](https://tva1.sinaimg.cn/large/0081Kckwly1gl9wdmg9sij30it07xgnm.jpg)
+![specify a field](docs/imgs/field.png)
 
 ### inner
 
 `inner` controls parser's behaving. Techly, `inner=True` means parsing `field.body`, while `inner=False` parses `[field]`. So, if  `inner=True`, pyflowchart will look into the field, otherwise, it takes the `field` as a node.
 
-![pyflowchart_inner](https://tva1.sinaimg.cn/large/0081Kckwly1gl9xf1uo5fj31d30jr78m.jpg)
+![pyflowchart_inner](docs/imgs/inner.png)
 
 For CLI,  adding an argument `-i`  means `inner=True`, else `inner=False`.
 
@@ -236,26 +240,26 @@ while a < 4:
 ```python
 flowchart = Flowchart.from_code(example_simplify_py, field="", inner=True)
 print(flowchart.flowchart())
-# CLI $ p3 -m pyflowchart example_simplify.py 
+# SH $ python3 -m pyflowchart example_simplify.py 
 ```
 
-![simplify result](./doc/simplify.png)
+![simplify result](docs/imgs/simplify.png)
 
 - `simplify=False`:
 
 ```python
 flowchart = Flowchart.from_code(example_simplify_py, field="", inner=True, simplify=False)
 print(flowchart.flowchart())
-# CLI $ p3 -m pyflowchart --no-simplify example_simplify.py 
+# SH $ python3 -m pyflowchart --no-simplify example_simplify.py 
 ```
 
-![no simplify result](./doc/no-simplify.png)
+![no simplify result](docs/imgs/no-simplify.png)
 
 ## Beautify Flowcharts
 
 Sometimes, the generated flowchart is awful. In that case, you are encouraged to modify the generated flowchart code by yourself OR consider making your python source code at bottom more clear if it's exceedingly complex.
 
-## TODO
+## TODOs
 
 - [ ] Directly generate flowchart SVG/HTML:
 
@@ -269,7 +273,7 @@ Depends on `node.js` and `flowchart.js`.
 
 Well, I guess a **GUI** for PyFlowchart may be remarkable. Pasting your code into it, the flowchart DSL will be generated just in time, and the flowchart will be shown aside.
 
-- [ ] ~~The Chinese README your buddies waiting for!~~ 希望有大佬帮助贡献个中文 README 呀。
+- [ ] ~~The Chinese README your buddies waiting for!~~ 希望有同学帮助贡献个中文 README 呀。
 
 ----
 
@@ -283,7 +287,7 @@ Sadly, I am too busy (pronounced as `[ˈlеizi]`——lazy) to code these ideas.
 
 ## License
 
-Copyright 2020 CDFMLR. All rights reserved.
+Copyright 2020-2022 CDFMLR. All rights reserved.
 
 Licensed under the MIT License.
 
