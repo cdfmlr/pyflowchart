@@ -553,7 +553,7 @@ class Return(NodesGroup, AstNode):
     #
     def connect(self, sub_node) -> None:
         """
-        Return should not be connect with anything
+        Return should not be connected with anything
         """
         pass
 

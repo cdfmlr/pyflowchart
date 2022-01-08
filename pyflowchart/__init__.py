@@ -1,5 +1,5 @@
 """
-PyFlow
+PyFlowchart
 --------
 
 PyFlowchart is a package to write flowchart in Python

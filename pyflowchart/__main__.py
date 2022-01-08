@@ -6,9 +6,9 @@ Use of this source code is governed by a MIT
 license that can be found in the LICENSE file.
 """
 
-import sys
-import chardet
 import argparse
+
+import chardet
 
 from pyflowchart.flowchart import Flowchart
 
