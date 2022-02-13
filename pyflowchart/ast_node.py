@@ -167,7 +167,8 @@ class LoopCondition(AstConditionNode):
     """a AstConditionNode special for Loop"""
 
     def connect(self, sub_node, direction='') -> None:
-        self.set_connect_direction(direction)
+        if direction:
+            self.set_connect_direction(direction)
         self.connect_no(sub_node)
 
     def is_one_line_body(self) -> bool:

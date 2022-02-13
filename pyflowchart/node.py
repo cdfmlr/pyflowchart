@@ -115,7 +115,8 @@ class Node(object):
         Returns:
             None
         """
-        self.set_connect_direction(direction)
+        if direction:
+            self.set_connect_direction(direction)
         self.connections.append(sub_node)
 
     def set_connect_direction(self, connect_direction) -> None:
@@ -215,7 +216,8 @@ class NodesGroup(Node):
     def connect(self, sub_node, direction='') -> None:
         for t in self.tails:
             if isinstance(t, Node):
-                t.set_connect_direction(direction)
+                if direction:
+                    t.set_connect_direction(direction)
                 t.connect(sub_node)
 
     def _clean_fc(self) -> None:
@@ -349,12 +351,14 @@ class ConditionNode(Node):
 
     def connect_yes(self, yes_node: Node, direction: str = ''):
         self.connection_yes = CondYN(self, CondYN.YES, yes_node)
-        self.connection_yes.set_connect_direction(direction)
+        if direction:
+            self.connection_yes.set_connect_direction(direction)
         self.connections.append(self.connection_yes)
 
     def connect_no(self, no_node: Node, direction: str = ''):
         self.connection_no = CondYN(self, CondYN.NO, no_node)
-        self.connection_no.set_connect_direction(direction)
+        if direction:
+            self.connection_no.set_connect_direction(direction)
         self.connections.append(self.connection_no)
 
     def no_align_next(self):
@@ -407,6 +411,7 @@ class CondYN(Node):
         return ""
 
     def connect(self, sub_node, direction='') -> None:
-        self.set_connect_direction(direction)
+        if direction:
+            self.set_connect_direction(direction)
         self.connections.append(sub_node)
         self.sub = sub_node
