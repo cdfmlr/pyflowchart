@@ -363,6 +363,8 @@ class If(NodesGroup, AstNode):
 
         if kwargs.get("simplify", True):
             self.simplify()
+        if kwargs.get("conds_align", False) and self.cond_node.is_no_else():
+            self.cond_node.connection_yes.set_connect_direction("right")
 
     def parse_if_body(self, **kwargs) -> None:
         """
@@ -400,11 +402,11 @@ class If(NodesGroup, AstNode):
             self.append_tails(virtual_no)
 
     def simplify(self) -> None:
-        """
-        simplify following case:
+        """simplify the one-line body case:
             if expr:
                 one_line_body
             # no else
+
         before:
             ... -> If (self, NodesGroup) -> IfCondition('if expr') -> CommonOperation('one_line_body') -> ...
         after:
@@ -425,6 +427,25 @@ class If(NodesGroup, AstNode):
 
         except AttributeError as e:
             print(e)
+
+    def align(self):
+        """ConditionNode alignment support #14
+            if cond1:
+                op1
+            if cond2:
+                op2
+            if cond3:
+                op3
+            op_end
+
+        Simplify: add param `align-next=no` to cond1~3, which improves the generated flowchart.
+
+        See:
+            - https://github.com/cdfmlr/pyflowchart/issues/14
+            - https://github.com/adrai/flowchart.js/issues/221#issuecomment-846919013
+            - https://github.com/adrai/flowchart.js/issues/115
+        """
+        self.cond_node.no_align_next()
 
 
 ####################
@@ -606,8 +627,11 @@ def parse(ast_list: List[_ast.AST], **kwargs) -> ParseProcessGraph:
 
     Args:
         ast_list: a list of _ast.AST object
-        **kwargs:
-            - simplify: for If & Loop: simplify the one line body case
+
+    Keyword Args:
+        * simplify: for If & Loop: simplify the one line body cases
+        * conds_align: for If: allow the align-next option set for the condition nodes.
+            See https://github.com/cdfmlr/pyflowchart/issues/14
 
     Returns:
         ParseGraph
@@ -638,6 +662,13 @@ def parse(ast_list: List[_ast.AST], **kwargs) -> ParseProcessGraph:
             tail_node = node
         else:
             tail_node.connect(node)
+
+            # ConditionNode alignment support (Issue#14)
+            # XXX: It's ugly to handle it here. But I have no idea, for this moment, to make it ELEGANT.
+            if isinstance(tail_node, If) and isinstance(node, If) and \
+                    kwargs.get("conds_align", False):
+                tail_node.align()
+
             tail_node = node
 
     process.set_head(head_node)
