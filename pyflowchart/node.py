@@ -10,7 +10,7 @@ license that can be found in the LICENSE file.
 
 import time
 import uuid
-import itertools    # for count
+import itertools  # for count
 
 
 class Node(object):
@@ -28,6 +28,7 @@ class Node(object):
         self.node_text = ''  # flowchart.js Node Syntax: nodeText
         self.connections = []  # list<Node>, connected (next / sub) nodes.
 
+        self.params = {}  # flowchart.js #115 e.g. `element(param1=value1,param2=value2)=>start: Start`
         self.connect_direction = None  # custom thisNode(connect_direction)->nextNode
 
         self.__visited = None
@@ -36,11 +37,21 @@ class Node(object):
 
     def fc_definition(self) -> str:
         """fc_definition returns the flowchart.js node definition string of current Node  (self only, subs excepted).
+        Returns a flowchart.js node definition string:
+            "node_name=>node_type: node_text".
+        And if params is not empty, regarding https://github.com/adrai/flowchart.js/issues/115,
+        it will output:
+            "node_name(param1=value1,param2=value2)=>node_type: node_text"
 
         Returns:
-            a flowchart.js node definition string: "node_name=>node_type: node_text"
+            str
         """
-        return f'{self.node_name}=>{self.node_type}: {self.node_text}\n'
+        params = ''
+        if self.params:
+            params = ','.join((f'{k}={self.params[k]}' for k in self.params))  # 'param1=value1,param2=value2'
+            params = f'({params})'
+
+        return f'{self.node_name}{params}=>{self.node_type}: {self.node_text}\n'
 
     def fc_connection(self) -> str:
         """fc_connection returns the flowchart.js node connection string of current Node (self only, subs excepted).
@@ -116,6 +127,20 @@ class Node(object):
             None
         """
         self.connect_direction = connect_direction
+
+    def set_param(self, key: str, value: str):
+        """ Set a `(param=value)`.
+        See: https://github.com/adrai/flowchart.js/issues/115
+
+        Args:
+            key: str, key of param
+            value: str, value of param
+
+        Returns:
+            None
+        """
+        if key and value:
+            self.params[key] = value
 
 
 class NodesGroup(Node):
@@ -288,13 +313,25 @@ class ConditionNode(Node):
     """
     node_type = 'condition'
 
-    def __init__(self, cond: str):
+    def __init__(self, cond: str, align_next=True):
+        """ConditionNode is a Node subclass for flowchart.js `condition` node.
+
+        [v0.2.0] Set `align_next=False` to enable the `align-next=no` feature.
+        See https://github.com/adrai/flowchart.js/issues/115 for details.
+
+        Args:
+            cond: str: the content of this ConditionNode
+            align_next: bool: set False to write a `align-next=no` param. (default True)
+        """
         super().__init__()
         self.node_name = f'cond{self.id}'
         self.node_text = f'{cond}'
 
         self.connection_yes = None
         self.connection_no = None
+
+        if not align_next:
+            self.no_align_next()
 
     def connect_yes(self, yes_node: Node):
         self.connection_yes = CondYN(self, CondYN.YES, yes_node)
@@ -303,6 +340,16 @@ class ConditionNode(Node):
     def connect_no(self, no_node: Node):
         self.connection_no = CondYN(self, CondYN.NO, no_node)
         self.connections.append(self.connection_no)
+
+    def no_align_next(self):
+        """set param: `(align-next=no)`
+
+        See https://github.com/adrai/flowchart.js/issues/115
+
+        Returns:
+            None
+        """
+        self.set_param('align-next', 'no')
 
 
 class CondYN(Node):
