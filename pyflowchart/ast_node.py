@@ -166,7 +166,8 @@ class FunctionDef(NodesGroup, AstNode):
 class LoopCondition(AstConditionNode):
     """a AstConditionNode special for Loop"""
 
-    def connect(self, sub_node) -> None:
+    def connect(self, sub_node, direction='') -> None:
+        self.set_connect_direction(direction)
         self.connect_no(sub_node)
 
     def is_one_line_body(self) -> bool:
@@ -466,7 +467,7 @@ class BreakContinueSubroutine(AstNode, SubroutineNode):
         AstNode.__init__(self, ast_break_continue, **kwargs)
         SubroutineNode.__init__(self, self.ast_to_source())
 
-    def connect(self, sub_node) -> None:
+    def connect(self, sub_node, direction='') -> None:
         # a BreakContinueSubroutine should connect to nothing
         pass
 
@@ -551,7 +552,7 @@ class Return(NodesGroup, AstNode):
     #     """
     #     return NodesGroup.fc_connection(self)
     #
-    def connect(self, sub_node) -> None:
+    def connect(self, sub_node, direction='') -> None:
         """
         Return should not be connected with anything
         """

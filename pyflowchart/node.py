@@ -13,6 +13,17 @@ import uuid
 import itertools  # for count
 
 
+# TODO(v1.0): Noticing that all connections look like `xxx(params)->yyy`,
+#       where params maybe something like `right`, `yes`, or `yes,right`,
+#       A good idea is to make a new class Connection as:
+#           class Connection(object):
+#               next_node: Node
+#               params: dict
+#       It helps to customize the directions of connections and we may not even
+#       need a CondYN anymore!
+#       But this changes a lot and seems not necessary now. So it's maybe a
+#       further version 1.0 job to achieve this.
+
 class Node(object):
     """Node is a abstract class for kinds of flowchart node.
     """
@@ -92,17 +103,19 @@ class Node(object):
             if isinstance(c, Node):
                 c._traverse(func, visited_flag)
 
-    def connect(self, sub_node) -> None:
+    def connect(self, sub_node, direction='') -> None:
         """connect: self->sub_node
 
         This method is a shorthand for node.connections.append(sub_node)
 
         Args:
             sub_node: another Node object to be connected.
+            direction: connect direction: "left|right|top|bottom"
 
         Returns:
             None
         """
+        self.set_connect_direction(direction)
         self.connections.append(sub_node)
 
     def set_connect_direction(self, connect_direction) -> None:
@@ -199,9 +212,10 @@ class NodesGroup(Node):
 
         self.head._traverse(func_stop_at_tails, visited_flag)
 
-    def connect(self, sub_node) -> None:
+    def connect(self, sub_node, direction='') -> None:
         for t in self.tails:
             if isinstance(t, Node):
+                t.set_connect_direction(direction)
                 t.connect(sub_node)
 
     def _clean_fc(self) -> None:
@@ -333,12 +347,14 @@ class ConditionNode(Node):
         if not align_next:
             self.no_align_next()
 
-    def connect_yes(self, yes_node: Node):
+    def connect_yes(self, yes_node: Node, direction: str = ''):
         self.connection_yes = CondYN(self, CondYN.YES, yes_node)
+        self.connection_yes.set_connect_direction(direction)
         self.connections.append(self.connection_yes)
 
-    def connect_no(self, no_node: Node):
+    def connect_no(self, no_node: Node, direction: str = ''):
         self.connection_no = CondYN(self, CondYN.NO, no_node)
+        self.connection_no.set_connect_direction(direction)
         self.connections.append(self.connection_no)
 
     def no_align_next(self):
@@ -390,6 +406,7 @@ class CondYN(Node):
             return f'{self.cond.node_name}{specification}->{self.sub.node_name}\n'
         return ""
 
-    def connect(self, sub_node) -> None:
+    def connect(self, sub_node, direction='') -> None:
+        self.set_connect_direction(direction)
         self.connections.append(sub_node)
         self.sub = sub_node
