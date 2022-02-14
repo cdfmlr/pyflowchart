@@ -40,7 +40,7 @@ class Flowchart(NodesGroup):
         return self.fc_definition() + '\n' + self.fc_connection()
 
     @staticmethod
-    def from_code(code: str, field: str = "", inner=True, simplify=True):
+    def from_code(code: str, field: str = "", inner=True, simplify=True, conds_align=False):
         """
         Get a Flowchart instance from a str of Python code.
 
@@ -50,6 +50,7 @@ class Flowchart(NodesGroup):
             field: str,  path to field (function) you want to draw flowchart
             inner: bool, True: parse the body of field; Field: parse the body as an object
             simplify: bool, for If & Loop statements: simplify the one-line-body or not.
+            conds_align: bool, for consecutive If statements: conditionNode alignment support (Issue#14) or not
 
         Returns:
             A Flowchart instance parsed from given code.
@@ -98,7 +99,7 @@ class Flowchart(NodesGroup):
         assert field_ast.body, f"{field}: nothing to parse. Check given code and field please."
 
         f = field_ast.body if inner else [field_ast]
-        p = parse(f, simplify=simplify)
+        p = parse(f, simplify=simplify, conds_align=conds_align)
         return Flowchart(p.head)
 
     @staticmethod

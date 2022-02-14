@@ -21,7 +21,7 @@ To flowchartlize your python codes in `example.py`，run:
 $ python3 -m pyflowchart example.py
 ```
 
-PyFlowchart will output the generated flowchart.js DSL. Go http://flowchart.js.org or use editors like [Typora](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts) to turns the output code into a rendered diagram.
+PyFlowchart will output the generated flowchart.js DSL. Go to http://flowchart.js.org or use editors like [Typora](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts) to turn the output code into a rendered diagram.
 
 To specify a function (or a method in a class) to flowchartlize:
 
@@ -48,7 +48,7 @@ PyFlowchart supports [flowchart.js](https://github.com/adrai/flowchart.js#node-t
 - SubroutineNode
 - EndNode
 
-Nodes can be connected by `connect()` method (`connect_{yes|no}` for ConditionNode).
+Nodes can be connected by `connect()` method (`connect_{yes|no}` for ConditionNode). An optional second parameter to `connect()` is used to specify the connect_direction.
 
 Get a Flowchart with your start node and call its `flowchart()` method to generate flowchart.js flowchart DSL：
 
@@ -62,14 +62,11 @@ io = InputOutputNode(InputOutputNode.OUTPUT, 'something...')
 sub = SubroutineNode('A Subroutine')
 e = EndNode('a_pyflow_test')
 
-# define the direction the connection will leave the node from
-sub.set_connect_direction("right")
-    
 st.connect(op)
 op.connect(cond)
 cond.connect_yes(io)
 cond.connect_no(sub)
-sub.connect(op)
+sub.connect(op, "right")  # sub->op line starts from the right of sub
 io.connect(e)
  
 fc = Flowchart(st)
@@ -101,6 +98,40 @@ Then you can visit http://flowchart.js.org and translate the generated textual r
 ![screenshot on flowchart.js page](docs/imgs/flowchart-js-org.png)
 
 P.S. Many Markdown editors (for example, Typora) support this flowchart syntax, too (reference: [Typora doc about flowchart](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts)). And if you prefer CLI, see [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart).
+
+### Set Params to Nodes
+
+Since v0.2.0, we support a `Node.set_param(key, value)` method to generate flowchart like this:
+
+```
+element(param1=value1,param2=value2)=>start: Start
+```
+
+(See also [adrai/flowchart.js#node-specific-specifiers-by-type](https://github.com/adrai/flowchart.js#node-specific-specifiers-by-type))
+
+And for convenience, there are grammar sugars to set param `align-next=no` for ConditionNodes:
+
+```python
+cond = ConditionNode("a cond node")
+cond.no_align_next()
+# or do this at __init__:
+cond = ConditionNode("a cond node", align_next=False)
+```
+
+This usually works with a connect_direction customization:
+
+```python
+cond.connect_yes(op, "right")
+```
+
+The generated flowchart will look like:
+
+```
+cond(align-next=no)=>condition: Yes or No?
+...
+
+cond(yes,right)->op
+```
 
 ## Python to Flowchart
 
@@ -146,13 +177,13 @@ Or, in Python
 As mentioned above, we use `Flowchart.from_code` to translate Python codes into Flowcharts. The `from_code` is defined as:
 
 ```python
-Flowchart.from_code(code, field='', inner=True, simplify=True)
+Flowchart.from_code(code, field="", inner=True, simplify=True, conds_align=False)
 ```
 
 PyFlowchart CLI is a 1:1 interface for this function:
 
 ```sh
-python3 -m pyflowchart [-f FIELD] [-i] [--no-simplify] code_file
+python3 -m pyflowchart [-f FIELD] [-i] [--no-simplify] [--conds-align] code_file
 ```
 
 Let's talk about those three args:
@@ -160,6 +191,7 @@ Let's talk about those three args:
 - `field`: str: Specify a field of code to generate a flowchart
 - `inner`: bool:  `True` to parse the body of field; whereas `False` to parse the body as a single object.
 - `simplify`: bool: for If & Loop statements: simplify the one-line-body or not
+- `conds_align`: bool: improve the flowchart of *consecutive If statements* converted from python code. (Beta)
 
 ### field
 
@@ -255,9 +287,26 @@ print(flowchart.flowchart())
 
 ![no simplify result](docs/imgs/no-simplify.png)
 
+### conds-align (Beta)
+
+Improve the flowchart of *consecutive If statements* converted from python code with the new feature of  `v0.2.0`.
+
+```python
+# example-conds-align.py
+if cond1:
+	op1
+if cond2:
+	op2
+if cond3:
+	op3
+op_end
+```
+
+![conds-align-result](docs/imgs/conds-align.png)
+
 ## Beautify Flowcharts
 
-Sometimes, the generated flowchart is awful. In that case, you are encouraged to modify the generated flowchart code by yourself OR consider making your python source code at bottom more clear if it's exceedingly complex.
+Sometimes, the generated flowchart is awful. In those cases, you are encouraged to modify the generated flowchart code by yourself OR consider making your python source code at bottom more clear if it's exceedingly complex.
 
 ## TODOs
 
@@ -274,6 +323,7 @@ Depends on `node.js` and `flowchart.js`.
 Well, I guess a **GUI** for PyFlowchart may be remarkable. Pasting your code into it, the flowchart DSL will be generated just in time, and the flowchart will be shown aside.
 
 - [ ] ~~The Chinese README your buddies waiting for!~~ 希望有同学帮助贡献个中文 README 呀。
+- [ ] Tests automation.
 
 ----
 
