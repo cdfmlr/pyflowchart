@@ -1,5 +1,7 @@
 # PyFlowchart
 
+English | [机翻中文](README_zh-CN.md)
+
 PyFlowchart is a package to:
 
 - write flowcharts in the Python language,
