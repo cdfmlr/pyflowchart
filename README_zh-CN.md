@@ -51,10 +51,10 @@ PyFlowchart支持[flowchart.js]（https://github.com/adrai/flowchart.js#node-typ
 - SubroutineNode
 - 结束节点
 
-节点可以通过 `connect()` 方法连接（ConditionNode为 `connect_{yes|no}`）。`connect()` 还可以接收第二个可选的参数，用于指定连线的方向。
+节点可以通过 `connect()` 方法连接（ConditionNode为 `connect_{yes|no}`）。`connect()` 还可以接收第二个可选的参数，用于指定连线的方向。
 
 
-用你的启动节点获得一个流程图对象（`Flowchart`），并调用其 `flowchart()` 方法来生成 flowchart.js 流程图 DSL：
+用你的启动节点获得一个流程图对象（`Flowchart`），并调用其 `flowchart()` 方法来生成 flowchart.js 流程图 DSL：
 
 ```python
 from pyflowchart import *
@@ -105,7 +105,7 @@ P.S. 许多 Markdown 编辑器（例如 Typora）也支持这种流程图语法�
 
 ### 为节点设置参数
 
-从 v0.2.0 开始，我们支持 `Node.set_param(key, value)` 方法来生成这样的流程图：
+从 v0.2.0 开始，我们支持 `Node.set_param(key, value)` 方法来生成这样的流程图：
 
 ```
 element(param1=value1,param2=value2)=>start: Start
@@ -178,7 +178,7 @@ $ python3 -m pyflowchart simple.py
 
 ## 进阶用法
 
-如上所述，我们使用 `Flowchart.from_code` 来将Python代码翻译成流程图。该函数的签名如下：
+如上所述，我们使用 `Flowchart.from_code` 来将Python代码翻译成流程图。该函数的签名如下：
 
 ```python
 Flowchart.from_code(code, field="", inner=True, simplify=True, conds_align=False)
@@ -226,7 +226,7 @@ print("end")
     - "Bar.buzz"
     - "Bar.buzz.g"
 
-如果要生成 `Bar.buzz.g` 的流程图，可以运行：
+如果要生成 `Bar.buzz.g` 的流程图，可以运行：
 
 ```python
 # Python
@@ -250,11 +250,11 @@ python3 -m pyflowchart example.py -f Bar.buzz.g
 
 ### inner
 
-`inner` 控制解析器的行为。技术上来说，`inner=True` 意味着解析 `field.body`，而`inner=False` 则会解析 `[field,]`。所以，如果 `inner=True`，pyflowchart 将进入 field 内部进行解析，否则，它将把整个 `field` 作为一个节点：
+`inner` 控制解析器的行为。技术上来说，`inner=True` 意味着解析 `field.body`，而`inner=False` 则会解析 `[field,]`。所以，如果 `inner=True`，pyflowchart 将进入 field 内部进行解析，否则，它将把整个 `field` 作为一个节点：
 
 ![pyflowchart_inner](docs/imgs/inner.png)
 
-对于CLI，添加一个参数 `-i` 意味着 `inner=True`，否则 `inner=False`。
+对于CLI，添加一个参数 `-i` 意味着 `inner=True`，否则 `inner=False`。
 
 ### simplify
 
@@ -293,7 +293,7 @@ print(flowchart.flowchart())
 
 ### conds-align (Beta)
 
-利用 v0.2.0  的新功能，改进从 Python 代码转换的 *连续的 If 语句* 的流程图。
+利用 v0.2.0  的新功能，改进从 Python 代码转换的 *连续的 If 语句* 的流程图。
 
 ```python
 # example-conds-align.py
@@ -312,7 +312,7 @@ op_end
 
 有时，生成的流程图是很糟糕的。在这种情况下，我们鼓励你自己修改生成的流程图代码，或者考虑修改你要生成流程图的 python 源代码，让它表达更加清晰，如果它非常复杂（例如去掉异常处理——如果它们只是工程上的保障，而不是算法流程的一部分）
 
-（流程图应该被用来表示算法，而不是具体实现。算法是给人看的，实现是给机器看的。所以算法和具体实现的一个重要区别是，我们的代码实现中，时常需要加入一些工程上的保障，例如判断输入值是否合法，不过这对于算法描述并不重要——对人脑来说 `"1" + "1" == "2"` 问题也不大，能看懂就行。我推荐在生成流程图之前，把这些在实践上举足轻重、但在算法上细枝末节代码去掉。）
+（流程图应该被用来表示算法，而不是具体实现。算法是给人看的，实现是给机器看的。所以算法和具体实现的一个重要区别是，我们的代码实现中，时常需要加入一些工程上的保障，例如判断输入值是否合法，不过这对于算法描述并不重要——对人脑来说 `"1" + "1" == "2"` 问题也不大，能看懂就行。我推荐在生成流程图之前，把这些在实践上举足轻重、但在算法上细枝末节代码去掉。）
 
 ## TODOs
 
@@ -322,20 +322,20 @@ op_end
 $ pyflowchart example.py -o flowchart.svg
 ```
 
-这个非常方便，就不需要手动转化成图了，但这个似乎要依赖 `node.js` 和 `flowchart.js`。
+这个非常方便，就不需要手动转化成图了，但这个似乎要依赖 `node.js` 和 `flowchart.js`。
 
 - [ ] PyFlowchart GUI
 
-好吧，我想如果写一个 PyFlowchart 的 **GUI** 可能会很了不起。把你的代码粘贴进去，流程图 DSL 就会及时生成，流程图也会显示在一边，非常方便。
+好吧，我想如果写一个 PyFlowchart 的 **GUI** 可能会很了不起。把你的代码粘贴进去，流程图 DSL 就会及时生成，流程图也会显示在一边，非常方便。
 
 - [ ] ~~The Chinese README your buddies waiting for!~~ 希望有同学帮助改进这个中文 README 呀。（现在这个大部分都是机翻，但是我校过，应该勉强能看）
-- [ ] 自动化测试。
+- [x] 自动化测试。
 
 ----
 
-Sadly, I am too busy (pronounced as ) to code these ideas. Please [submit an issue](https://github.com/cdfmlr/pyflowchart/issues/new) to push me on. Or, PR to make it by yourself. I cannot wait to appreciate your great contribution!
+Sadly, I am too busy (pronounced as `[ˈlеizi]`——lazy) to code these ideas. Please [submit an issue](https://github.com/cdfmlr/pyflowchart/issues/new) to push me on. Or, PR to make it by yourself. I cannot wait to appreciate your great contribution!
 
-遗憾的是，我太忙了（写作忙碌，读作懒惰），无法马上实现这些想法。如果你对包括但不限于这里列出的 feature 有所期待，请务必 [提交一个 issue](https://github.com/cdfmlr/pyflowchart/issues/new) 来 push 我。或者，你可以自己来做，直接 PR，我已经迫不及待地想欣赏你的杰出贡献了!
+遗憾的是，我太忙了（写作忙碌，读作懒惰），无法马上实现这些想法。如果你对包括但不限于这里列出的 feature 有所期待，请务必 [提交一个 issue](https://github.com/cdfmlr/pyflowchart/issues/new) 来 push 我。或者，你可以自己来做，直接 PR，我已经迫不及待地想欣赏你的杰出贡献了!
 
 ## References
 

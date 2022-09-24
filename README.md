@@ -325,7 +325,7 @@ Depends on `node.js` and `flowchart.js`.
 Well, I guess a **GUI** for PyFlowchart may be remarkable. Pasting your code into it, the flowchart DSL will be generated just in time, and the flowchart will be shown aside.
 
 - [ ] ~~The Chinese README your buddies waiting for!~~ 希望有同学帮助贡献个中文 README 呀。
-- [ ] Tests automation.
+- [x] Tests automation.
 
 ----
 
