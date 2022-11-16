@@ -12,7 +12,7 @@ PyFlowchart produces flowcharts in [flowchart.js](https://github.com/adrai/flowc
 ## Get PyFlowchart
 
 ```sh
-$ pip3 install pyflowchart
+$ pip install pyflowchart
 ```
 
 ## Quick Start
@@ -20,17 +20,19 @@ $ pip3 install pyflowchart
 To flowchartlize your python codes in `example.py`，run:
 
 ```sh
-$ python3 -m pyflowchart example.py
+$ python -m pyflowchart example.py
 ```
+
+> ⚠️ PyFlowchart works with **Python 3.7+**. To check your python version, please run [`python --version`](https://docs.python.org/3/using/cmdline.html#cmdoption-version). If there are both Python 2 and Python 3 installed, it could require you to use `python3` instead of `python`, though this is becoming rare due to the [sunset of Python 2](https://www.python.org/doc/sunset-python-2/).
 
 PyFlowchart will output the generated flowchart.js DSL. Go to http://flowchart.js.org or use editors like [Typora](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts) to turn the output code into a rendered diagram.
 
 To specify a function (or a method in a class) to flowchartlize:
 
 ```sh
-$ python3 -m pyflowchart example.py -f function_name
+$ python -m pyflowchart example.py -f function_name
 # or
-$ python3 -m pyflowchart example.py -f ClassName.method_name
+$ python -m pyflowchart example.py -f ClassName.method_name
 ```
 
 🎉 Now you are ready to enjoy the flowchartlization.
@@ -154,7 +156,7 @@ def foo(a, b):
 Run PyFlowchart in CLI to generate flowchart code:
 
 ```sh
-$ python3 -m pyflowchart simple.py
+$ python -m pyflowchart simple.py
 
 # output flowchart code.
 ```
@@ -185,7 +187,7 @@ Flowchart.from_code(code, field="", inner=True, simplify=True, conds_align=False
 PyFlowchart CLI is a 1:1 interface for this function:
 
 ```sh
-python3 -m pyflowchart [-f FIELD] [-i] [--no-simplify] [--conds-align] code_file
+python -m pyflowchart [-f FIELD] [-i] [--no-simplify] [--conds-align] code_file
 ```
 
 Let's talk about those three args:
@@ -239,7 +241,7 @@ Or:
 
 ```sh
 # CLI
-python3 -m pyflowchart example.py -f Bar.buzz.g
+python -m pyflowchart example.py -f Bar.buzz.g
 ```
 
 Output result:
@@ -274,7 +276,7 @@ while a < 4:
 ```python
 flowchart = Flowchart.from_code(example_simplify_py, field="", inner=True)
 print(flowchart.flowchart())
-# SH $ python3 -m pyflowchart example_simplify.py 
+# SH $ python -m pyflowchart example_simplify.py 
 ```
 
 ![simplify result](docs/imgs/simplify.png)
@@ -284,7 +286,7 @@ print(flowchart.flowchart())
 ```python
 flowchart = Flowchart.from_code(example_simplify_py, field="", inner=True, simplify=False)
 print(flowchart.flowchart())
-# SH $ python3 -m pyflowchart --no-simplify example_simplify.py 
+# SH $ python -m pyflowchart --no-simplify example_simplify.py 
 ```
 
 ![no simplify result](docs/imgs/no-simplify.png)

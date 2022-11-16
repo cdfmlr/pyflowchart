@@ -13,7 +13,7 @@ PyFlowchart 用 [flowchart.js](https://github.com/adrai/flowchart.js) DSL 来绘
 ## 安装 PyFlowchart
 
 ```sh
-$ pip3 install pyflowchart
+$ pip install pyflowchart
 ```
 
 ## 快速开始
@@ -21,17 +21,19 @@ $ pip3 install pyflowchart
 要将 `example.py` 中的 Python 代码流程图化，运行:
 
 ```sh
-$ python3 -m pyflowchart example.py
+$ python -m pyflowchart example.py
 ```
+
+> ⚠️ PyFlowchart 适用于 **Python 3.7+**。要检查您的 python 版本，请运行 [`python --version`](https://docs.python.org/3/using/cmdline.html#cmdoption-version)。如果同时安装了 Python 2 和Python 3，您可能需要使用 `python3` 而不是 `python`，尽管由于[Python 2 的日落](https://www.python.org/doc/sunset-python-2/)，这种情况已变得越来越罕见。
 
 PyFlowchart 将输出生成的 flowchart.js DSL。进入 http://flowchart.js.org ，或使用[Typora](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts) 等编辑器，可以将输出的文本渲染成流程图。
 
 如果要指定一个函数（或一个类中的方法）转化为流程图，请运行：
 
 ```sh
-$ python3 -m pyflowchart example.py -f function_name
+$ python -m pyflowchart example.py -f function_name
 # or
-$ python3 -m pyflowchart example.py -f ClassName.method_name
+$ python -m pyflowchart example.py -f ClassName.method_name
 ```
 
 🎉 现在，你已经准备好享受流程图的制作了。
@@ -42,7 +44,7 @@ $ python3 -m pyflowchart example.py -f ClassName.method_name
 
 PyFlowchart 允许你用 Python 表达一个流程图，我们会帮你把它翻译成 [flowchart.js](https://github.com/adrai/flowchart.js) DSL。
 
-PyFlowchart支持[flowchart.js]（https://github.com/adrai/flowchart.js#node-types）节点类型。
+PyFlowchart支持[flowchart.js](https://github.com/adrai/flowchart.js#node-types)节点类型。
 
 - StartNode
 - 操作节点
@@ -156,7 +158,7 @@ def foo(a, b):
 你可以在 CLI 中运行 PyFlowchart 来生成流程图代码：
 
 ```sh
-$ python3 -m pyflowchart simple.py
+$ python -m pyflowchart simple.py
 
 # output flowchart code.
 ```
@@ -187,7 +189,7 @@ Flowchart.from_code(code, field="", inner=True, simplify=True, conds_align=False
 PyFlowchart CLI 是这个函数的 1:1 接口：
 
 ```sh
-python3 -m pyflowchart [-f FIELD] [-i] [--no-simplify] [--conds-align] code_file
+python -m pyflowchart [-f FIELD] [-i] [--no-simplify] [--conds-align] code_file
 ```
 
 让我们谈谈这里的三个可选参数：
@@ -241,7 +243,7 @@ print(fc.flowchart())
 
 ```sh
 # CLI
-python3 -m pyflowchart example.py -f Bar.buzz.g
+python -m pyflowchart example.py -f Bar.buzz.g
 ```
 
 输出结果:
@@ -274,7 +276,7 @@ while a < 4:
 ```python
 flowchart = Flowchart.from_code(example_simplify_py, field="", inner=True)
 print(flowchart.flowchart())
-# SH $ python3 -m pyflowchart example_simplify.py 
+# SH $ python -m pyflowchart example_simplify.py 
 ```
 
 ![simplify result](docs/imgs/simplify.png)
@@ -284,7 +286,7 @@ print(flowchart.flowchart())
 ```python
 flowchart = Flowchart.from_code(example_simplify_py, field="", inner=True, simplify=False)
 print(flowchart.flowchart())
-# SH $ python3 -m pyflowchart --no-simplify example_simplify.py 
+# SH $ python -m pyflowchart --no-simplify example_simplify.py 
 ```
 
 ![no simplify result](docs/imgs/no-simplify.png)
