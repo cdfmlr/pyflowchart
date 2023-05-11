@@ -2,12 +2,12 @@
 
 English | [机翻中文](README_zh-CN.md)
 
-PyFlowchart is a package to:
+PyFlowchart is a Python package that lets you:
 
-- write flowcharts in the Python language,
-- translate Python source codes into flowcharts.
+- Write flowcharts in Python.
+- Translate Python source code into flowcharts.
 
-PyFlowchart produces flowcharts in [flowchart.js](https://github.com/adrai/flowchart.js) flowchart DSL, a widely used flow chart textual representation. It's easy to convert these flowcharts text into a picture via [flowchart.js.org](http://flowchart.js.org), [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart), or some markdown editors. 
+PyFlowchart produces flowcharts in the [flowchart.js](https://github.com/adrai/flowchart.js)  flowchart DSL, a widely used textual representation of flowcharts. You can convert these flowcharts to images using [flowchart.js.org](http://flowchart.js.org), [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart), or some markdown editors.
 
 ## Get PyFlowchart
 
@@ -17,17 +17,21 @@ $ pip install pyflowchart
 
 ## Quick Start
 
-To flowchartlize your python codes in `example.py`，run:
+Want to **flowchart your Python code in `example.py`?** Run this:
 
 ```sh
 $ python -m pyflowchart example.py
 ```
 
-> ⚠️ PyFlowchart works with **Python 3.7+**. To check your python version, please run [`python --version`](https://docs.python.org/3/using/cmdline.html#cmdoption-version). If there are both Python 2 and Python 3 installed, it could require you to use `python3` instead of `python`, though this is becoming rare due to the [sunset of Python 2](https://www.python.org/doc/sunset-python-2/).
+> ⚠️ PyFlowchart works with **Python 3.7+**. To check your Python version, run [`python --version`](https://docs.python.org/3/using/cmdline.html#cmdoption-version). 
+>
+> If you have both Python 2 and Python 3 installed, you may need to use `python3` instead of `python`. This is becoming less common as [Python 2 is sunsetting](https://www.python.org/doc/sunset-python-2/).
 
-PyFlowchart will output the generated flowchart.js DSL. Go to http://flowchart.js.org or use editors like [Typora](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts) to turn the output code into a rendered diagram.
+PyFlowchart will output the generated flowchart.js DSL. You can convert the output code to a rendered diagram by going to http://flowchart.js.org or using editors like Typora.
 
-To specify a function (or a method in a class) to flowchartlize:
+**To specify a function (or a method in a class) to flowchartlize:**
+
+- Use the `-f` flag to specify the function or method name.
 
 ```sh
 $ python -m pyflowchart example.py -f function_name
@@ -35,15 +39,17 @@ $ python -m pyflowchart example.py -f function_name
 $ python -m pyflowchart example.py -f ClassName.method_name
 ```
 
-🎉 Now you are ready to enjoy the flowchartlization.
+For example, to flowchartlize the `add()` function in the `MyClass` class, you would use the following command: `python3 -m pyflowchart example.py -f MyClass.add`.
 
-Keep reading this document to learn more usages.
+🎉 **Now you are ready to flowchart your code!**
+
+To learn more about how to use PyFlowchart, keep reading this document.
 
 ## Flowchart in Python
 
-PyFlowchart allows you to write a flowchart in Python which could be translated into the [flowchart.js](https://github.com/adrai/flowchart.js) DSL automatically.
+PyFlowchart lets you write flowcharts in Python, which can be automatically translated into the [flowchart.js](https://github.com/adrai/flowchart.js) DSL.
 
-PyFlowchart supports [flowchart.js](https://github.com/adrai/flowchart.js#node-types) node types:
+The following [flowchart.js node types](https://github.com/adrai/flowchart.js#node-types) are supported:
 
 - StartNode
 - OperationNode
@@ -52,7 +58,7 @@ PyFlowchart supports [flowchart.js](https://github.com/adrai/flowchart.js#node-t
 - SubroutineNode
 - EndNode
 
-Nodes can be connected by `connect()` method (`connect_{yes|no}` for ConditionNode). An optional second parameter to `connect()` is used to specify the connect_direction.
+To connect nodes, use the `connect()` method. For ConditionNodes, use the `connect_{yes|no}` syntax. You can optionally specify the connect_direction as a second parameter.
 
 Get a Flowchart with your start node and call its `flowchart()` method to generate flowchart.js flowchart DSL：
 
@@ -101,11 +107,11 @@ Then you can visit http://flowchart.js.org and translate the generated textual r
 
 ![screenshot on flowchart.js page](docs/imgs/flowchart-js-org.png)
 
-P.S. Many Markdown editors (for example, Typora) support this flowchart syntax, too (reference: [Typora doc about flowchart](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts)). And if you prefer CLI, see [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart).
+By the way, many Markdown editors, like Typora, also support this flowchart syntax. For more information, see [the Typora documentation on flowcharts]((https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts)). If you prefer the command line, you can use [francoislaberge/diagrams]((https://github.com/francoislaberge/diagrams/#flowchart)).
 
 ### Set Params to Nodes
 
-Since v0.2.0, we support a `Node.set_param(key, value)` method to generate flowchart like this:
+Starting with v0.2.0, you can use the `Node.set_param(key, value)` method to generate flowcharts like this:
 
 ```
 element(param1=value1,param2=value2)=>start: Start
@@ -113,7 +119,7 @@ element(param1=value1,param2=value2)=>start: Start
 
 (See also [adrai/flowchart.js#node-specific-specifiers-by-type](https://github.com/adrai/flowchart.js#node-specific-specifiers-by-type))
 
-And for convenience, there are grammar sugars to set param `align-next=no` for ConditionNodes:
+There is also a shortcut to set the `align-next=no` parameter for ConditionNodes: 
 
 ```python
 cond = ConditionNode("a cond node")
@@ -133,15 +139,14 @@ The generated flowchart will look like:
 ```
 cond(align-next=no)=>condition: Yes or No?
 ...
-
 cond(yes,right)->op
 ```
 
 ## Python to Flowchart
 
-PyFlowchart can also translate your Python Codes into Flowcharts.
+PyFlowchart can also translate your Python code into flowcharts.
 
-For example, you got a `simple.py`:
+For example, let's say you have a Python file called `simple.py` with the following code:
 
 ```python
 def foo(a, b):
@@ -153,7 +158,7 @@ def foo(a, b):
     return a + b
 ```
 
-Run PyFlowchart in CLI to generate flowchart code:
+To generate a flowchart from this code, you can run the following command in the terminal:
 
 ```sh
 $ python -m pyflowchart simple.py
@@ -161,7 +166,7 @@ $ python -m pyflowchart simple.py
 # output flowchart code.
 ```
 
-Or, in Python
+Or, in Python:
 
 ```python
 >>> from pyflowchart import Flowchart
@@ -184,18 +189,22 @@ As mentioned above, we use `Flowchart.from_code` to translate Python codes into 
 Flowchart.from_code(code, field="", inner=True, simplify=True, conds_align=False)
 ```
 
+- `code`: The Python code to be converted into a flowchart.
+- `field`: The name of a field in the code to be converted into a flowchart. If this parameter is not specified, the entire code will be converted.
+- `inner`: If `True`, the body of the field will be parsed as a nested flowchart. If `False`, the body of the field will be parsed as a single node.
+- `simplify`: If `True`, simple If and Loop statements will be simplified. For example, an If statement with a single expression will be converted into a single node.
+- `conds_align`: If `True`, consecutive If statements will be aligned in the flowchart.
+
 PyFlowchart CLI is a 1:1 interface for this function:
 
 ```sh
 python -m pyflowchart [-f FIELD] [-i] [--no-simplify] [--conds-align] code_file
 ```
 
-Let's talk about those three args:
-
-- `field`: str: Specify a field of code to generate a flowchart
-- `inner`: bool:  `True` to parse the body of field; whereas `False` to parse the body as a single object.
-- `simplify`: bool: for If & Loop statements: simplify the one-line-body or not
-- `conds_align`: bool: improve the flowchart of *consecutive If statements* converted from python code. (Beta)
+- `-f FIELD`: The name of the field to be converted into a flowchart.
+- `-i`:  If specified, the body of the field will be parsed as a nested flowchart.
+- `--no-simplify`:  If specified, the If and Loop statements will not be simplified.
+- `--conds-align`: If specified, consecutive If statements will be aligned in the flowchart.
 
 ### field
 
@@ -250,17 +259,19 @@ Output result:
 
 ### inner
 
-`inner` controls parser's behaving. Techly, `inner=True` means parsing `field.body`, while `inner=False` parses `[field]`. So, if  `inner=True`, pyflowchart will look into the field, otherwise, it takes the `field` as a node.
+The `inner` parameter controls how the parser behaves. If `inner=True`, the parser will look into the field and parse its body. If `inner=False`, the parser will take the field as a single node.
 
 ![pyflowchart_inner](docs/imgs/inner.png)
 
-For CLI,  adding an argument `-i`  means `inner=True`, else `inner=False`.
+In CLI, the `-i` argument sets `inner=True`. The absence of `-i` argument implies `inner=False`.
+
+🔧 For developers: Techly, `inner=True` means parsing `field.body`, while `inner=False` parses `[field]`.
 
 ### simplify
 
-simplify is for If & Loop statements: simplify the one-line-body.
+The `simplify` parameter controls whether to simplify If and Loop statements. When `simplify=True`, an If or Loop statements with one-line-body will be simplified into a single node.
 
-For example:
+For example, the following code:
 
 ```python
 # example_simplify.py
@@ -271,7 +282,7 @@ while a < 4:
     a = a + 1
 ```
 
-- Default: `simplify=True`:
+Would be converted into the following flowchart when **simplify=True** :
 
 ```python
 flowchart = Flowchart.from_code(example_simplify_py, field="", inner=True)
@@ -281,7 +292,7 @@ print(flowchart.flowchart())
 
 ![simplify result](docs/imgs/simplify.png)
 
-- `simplify=False`:
+And with `simplify=False`:
 
 ```python
 flowchart = Flowchart.from_code(example_simplify_py, field="", inner=True, simplify=False)
@@ -293,7 +304,7 @@ print(flowchart.flowchart())
 
 ### conds-align (Beta)
 
-Improve the flowchart of *consecutive If statements* converted from python code with the new feature of  `v0.2.0`.
+The `conds-align` parameter controls whether consecutive If statements are aligned in the flowchart. When `conds-align=True`, consecutive If statements are aligned in the flowchart.
 
 ```python
 # example-conds-align.py
@@ -308,9 +319,11 @@ op_end
 
 ![conds-align-result](docs/imgs/conds-align.png)
 
+**Note:** This feature is still in beta and may not work perfectly in all cases.
+
 ## Beautify Flowcharts
 
-Sometimes, the generated flowchart is awful. In those cases, you are encouraged to modify the generated flowchart code by yourself OR consider making your python source code at bottom more clear if it's exceedingly complex.
+The flowcharts generated by PyFlowchart may not always be perfect. In these cases, you can modify the generated flowchart code yourself or consider making your Python source code more clear. Clear and beautiful Python source code will result in more beautiful flowcharts generated by PyFlowchart.
 
 ## TODOs
 
@@ -324,14 +337,14 @@ Depends on `node.js` and `flowchart.js`.
 
 - [ ] PyFlowchart GUI
 
-Well, I guess a **GUI** for PyFlowchart may be remarkable. Pasting your code into it, the flowchart DSL will be generated just in time, and the flowchart will be shown aside.
+A **GUI** for PyFlowchart would be amazing. You could paste your Python code into it, and the flowchart DSL would be generated in real time, with the flowchart displayed alongside it. You could clearly see how the two are related.
 
 - [ ] ~~The Chinese README your buddies waiting for!~~ 希望有同学帮助贡献个中文 README 呀。
 - [x] Tests automation.
 
 ----
 
-Sadly, I am too busy (pronounced as `[ˈlеizi]`——lazy) to code these ideas. Please [submit an issue](https://github.com/cdfmlr/pyflowchart/issues/new) to push me on. Or, PR to make it by yourself. I cannot wait to appreciate your great contribution!
+Unfortunately, I am too busy (pronounced as `[ˈlеizi]`——lazy) to code these ideas myself. Please [submit an issue](https://github.com/cdfmlr/pyflowchart/issues/new) to push me on. Or, PR to make it by yourself. I cannot wait to appreciate your great contribution!
 
 ## References
 
@@ -341,7 +354,7 @@ Sadly, I am too busy (pronounced as `[ˈlеizi]`——lazy) to code these ideas.
 
 ## License
 
-Copyright 2020-2022 CDFMLR. All rights reserved.
+Copyright 2020-2023 CDFMLR. All rights reserved.
 
 Licensed under the MIT License.
 
