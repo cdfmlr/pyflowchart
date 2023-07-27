@@ -12,6 +12,8 @@ import chardet
 
 from pyflowchart.flowchart import Flowchart
 
+from pyflowchart.output_html import html_part_1,html_part_2,html_part_3
+import os
 
 def detect_decode(file_content: bytes) -> str:
     """detect_decode detect the encoding of file_content,
@@ -50,7 +52,7 @@ def detect_decode(file_content: bytes) -> str:
     return content
 
 
-def main(code_file, field, inner, simplify, conds_align):
+def main(code_file, field, inner, output, simplify, conds_align):
     # read file content: binary
     file_content: bytes = code_file.read()
     # detect encoding and decode file content by detected encoding
@@ -62,6 +64,15 @@ def main(code_file, field, inner, simplify, conds_align):
                                     simplify=simplify,
                                     conds_align=conds_align)
     print(flowchart.flowchart())
+    #if output file was specified, write output html
+    if bool(output):
+        with open(output, 'w') as f:
+            f.write(html_part_1)
+            f.write(os.path.basename(f.name))
+            f.write(html_part_2)
+            f.write(flowchart.flowchart())
+            f.write(html_part_3)
+        
 
 
 if __name__ == '__main__':
@@ -72,6 +83,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-f', '--field', default="", type=str, help="field to draw flowchart. (e.g. Class.method)")
     parser.add_argument('-i', '--inner', action="store_true", help="parse the body of field")
+    parser.add_argument('-o', '--output', default="", type=str, help="Output HTML file with flowchart")
     parser.add_argument('--no-simplify', action="store_false", help="do not simplify the one-line-body If/Loop")
     parser.add_argument('--conds-align', action="store_true", help="align consecutive If statements")
 
@@ -80,4 +92,4 @@ if __name__ == '__main__':
     if not args.field:  # field="", parse the whole file (ast Module), should use the body
         args.inner = True
 
-    main(args.code_file, args.field, args.inner, args.no_simplify, args.conds_align)
+    main(args.code_file, args.field, args.inner, args.output, args.no_simplify, args.conds_align)
