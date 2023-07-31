@@ -13,10 +13,6 @@ import chardet
 from pyflowchart.flowchart import Flowchart
 
 from pyflowchart.output_html import html_part_before_title,html_part_after_title_before_code_block,html_part_after_code_block_remaining_html
-
-
-
-
 import os
 
 def detect_decode(file_content: bytes) -> str:
@@ -87,7 +83,7 @@ def main(code_file, field, inner, output, simplify, conds_align):
             f.write(html_part_after_title_before_code_block)
             f.write(flowchart.flowchart())
             f.write(html_part_after_code_block_remaining_html)
-            print(f"Saved HTML to {output}")
+            print(f"Saved HTML togit co{output}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Python code to flowchart.')
