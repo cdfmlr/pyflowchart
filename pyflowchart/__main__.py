@@ -12,7 +12,11 @@ import chardet
 
 from pyflowchart.flowchart import Flowchart
 
-from pyflowchart.output_html import html_part_1,html_part_2,html_part_3
+from pyflowchart.output_html import html_part_before_title,html_part_after_title_before_code_block,html_part_after_code_block_remaining_html
+
+
+
+
 import os
 
 def detect_decode(file_content: bytes) -> str:
@@ -64,16 +68,26 @@ def main(code_file, field, inner, output, simplify, conds_align):
                                     simplify=simplify,
                                     conds_align=conds_align)
     print(flowchart.flowchart())
-    #if output file was specified, write output html
+    #If output file was specified, 
+    #Write output html format
+    #html blocks stored as variables in output_html.py
+    #html_part_before_title is header before <title>, 
+    #If field specified use that as title. If not, use output filename as title.
+    #Output remainder of header up to the code block (html_part_after_title_before_code_block)
+    #Output the flowchart.flowchart() into the code block section of the html
+    #Output the remainder of the html. (html_part_after_code_block_remaining_html)
+    #End code block. Add couple buttons. Add output canvas.
     if bool(output):
         with open(output, 'w') as f:
-            f.write(html_part_1)
-            f.write(os.path.basename(f.name))
-            f.write(html_part_2)
+            f.write(html_part_before_title)
+            if bool(field):
+                f.write(field)
+            else:
+                f.write(os.path.basename(f.name))
+            f.write(html_part_after_title_before_code_block)
             f.write(flowchart.flowchart())
-            f.write(html_part_3)
-        
-
+            f.write(html_part_after_code_block_remaining_html)
+            print(f"Saved HTML to {output}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Python code to flowchart.')
