@@ -143,12 +143,19 @@ This is based on <a href="https://github.com/adrai/flowchart.js">flowchart.js on
     # No checking or prompting if output file already exists.
     # This will overwrite if given an existing output file
     with open(output_name, 'w') as f:
-            f.write(html_part_before_title)
-            if bool(field_name):
-                f.write(field_name)
-            else:
-                f.write(os.path.basename(f.name))
-            f.write(html_part_after_title_before_code_block)
-            f.write(flowchart)
-            f.write(html_part_after_code_block_remaining_html)
-            print(f"Saved HTML to {output_name}")
+        # html_part_before_title is header before <title>, 
+        f.write(html_part_before_title)
+        # If field specified use that as title. If not, use output filename as title.
+        if bool(field_name):
+            f.write(field_name)
+        else:
+            f.write(os.path.basename(f.name))
+        # Output remainder of header up to the flowchart code block (html_part_after_title_before_code_block)
+        f.write(html_part_after_title_before_code_block)
+        # Output the flowchart into the code block section of the html
+        f.write(flowchart)
+        # Output the remainder of the html. (html_part_after_code_block_remaining_html)
+        # End code block. Add couple buttons. Add output canvas.
+        f.write(html_part_after_code_block_remaining_html)
+        # Print to console confirming to end user it was saved.
+        print(f"Saved HTML to {output_name}")
