@@ -11,9 +11,7 @@ import argparse
 import chardet
 
 from pyflowchart.flowchart import Flowchart
-
-from pyflowchart.output_html import html_part_before_title,html_part_after_title_before_code_block,html_part_after_code_block_remaining_html
-import os
+from pyflowchart.output_html import output_html
 
 def detect_decode(file_content: bytes) -> str:
     """detect_decode detect the encoding of file_content,
@@ -64,26 +62,10 @@ def main(code_file, field, inner, output, simplify, conds_align):
                                     simplify=simplify,
                                     conds_align=conds_align)
     print(flowchart.flowchart())
-    #If output file was specified, 
-    #Write output html format
-    #html blocks stored as variables in output_html.py
-    #html_part_before_title is header before <title>, 
-    #If field specified use that as title. If not, use output filename as title.
-    #Output remainder of header up to the code block (html_part_after_title_before_code_block)
-    #Output the flowchart.flowchart() into the code block section of the html
-    #Output the remainder of the html. (html_part_after_code_block_remaining_html)
-    #End code block. Add couple buttons. Add output canvas.
+    
+    # if output file was specified, send output, field, and flowchart over to output_html function
     if bool(output):
-        with open(output, 'w') as f:
-            f.write(html_part_before_title)
-            if bool(field):
-                f.write(field)
-            else:
-                f.write(os.path.basename(f.name))
-            f.write(html_part_after_title_before_code_block)
-            f.write(flowchart.flowchart())
-            f.write(html_part_after_code_block_remaining_html)
-            print(f"Saved HTML togit co{output}")
+        output_html(output_name=output, field_name=field, flowchart=flowchart.flowchart())
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Python code to flowchart.')
