@@ -50,7 +50,31 @@ def detect_decode(file_content: bytes) -> str:
     return content
 
 
-def main(code_file, field, inner, output, simplify, conds_align):
+def output(flowchart_str: str, file_name: str | None, field: str) -> None:
+    """output convert & write the flowchart into a file.
+
+    Args:
+        flowchart: the generated flowchart to write.
+        file_name: path to the target file. 
+                    - '' or None for stdout.
+                    - '*.html' or '*.htm' for HTML.
+        field_name: the field of flowchart.
+
+    """
+    if not file_name:  # stdout
+        print(flowchart_str)
+        return
+
+    ext = file_name.split('.')[-1]
+
+    if ext in ['html', 'htm']:
+        output_html(output_name=file_name, field_name=field, flowchart=flowchart_str)
+    else:  # not supported
+        print(flowchart_str)
+        print('\n*** Error: not supported output file format:', file_name)  # TODO: stderr
+
+
+def main(code_file, field, inner, output_file, simplify, conds_align):
     # read file content: binary
     file_content: bytes = code_file.read()
     # detect encoding and decode file content by detected encoding
@@ -61,11 +85,10 @@ def main(code_file, field, inner, output, simplify, conds_align):
                                     inner=inner,
                                     simplify=simplify,
                                     conds_align=conds_align)
-    print(flowchart.flowchart())
-    
-    # if output file was specified, send output, field, and flowchart over to output_html function
-    if bool(output):
-        output_html(output_name=output, field_name=field, flowchart=flowchart.flowchart())
+
+    # not output (-o): plain -> stdout
+    # output='*.html': output_html 
+    output(flowchart.flowchart(), output_file, field)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Python code to flowchart.')
