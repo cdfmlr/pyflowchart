@@ -7,7 +7,7 @@ PyFlowchart is a Python package that lets you:
 - Write flowcharts in Python.
 - Translate Python source code into flowcharts.
 
-PyFlowchart produces flowcharts in the [flowchart.js](https://github.com/adrai/flowchart.js)  flowchart DSL, a widely used textual representation of flowcharts. You can convert these flowcharts to images using [flowchart.js.org](http://flowchart.js.org), [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart), or some markdown editors.
+PyFlowchart produces flowcharts in the [flowchart.js](https://github.com/adrai/flowchart.js)  flowchart DSL, a widely used textual representation of flowcharts. You can convert these flowcharts to images using [flowchart.js.org](http://flowchart.js.org), [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart), or some markdown editors. You can also output HTML files (.htm or .html) of your flowcharts which writes your flowchart DSL into an example html based on [flowchart.js example.html](https://github.com/adrai/flowchart.js/blob/bd8b6194b09bfa0ebcc17ba070921f3a99a2b596/example/index.html) This HTML file will allow you to adjust or tweak the diagrams. Download links will allow you to save of the currently rendered flowchart as a .SVG or .PNG image.
 
 ## Get PyFlowchart
 
@@ -23,11 +23,17 @@ Want to **flowchart your Python code in `example.py`?** Run this:
 $ python -m pyflowchart example.py
 ```
 
+Want to **flowchart your Python code in `example.py` and see the output in graphical representation?** (the output file specified will overwrite any file that already has that name) Run this:
+
+```sh
+$ python -m pyflowchart example.py -o example.html
+```
+
 > ⚠️ PyFlowchart works with **Python 3.7+**. To check your Python version, run [`python --version`](https://docs.python.org/3/using/cmdline.html#cmdoption-version). 
 >
 > If you have both Python 2 and Python 3 installed, you may need to use `python3` instead of `python`. This is becoming less common as [Python 2 is sunsetting](https://www.python.org/doc/sunset-python-2/).
 
-PyFlowchart will output the generated flowchart.js DSL. You can convert the output code to a rendered diagram by going to http://flowchart.js.org or using editors like Typora.
+PyFlowchart will output the generated flowchart.js DSL. You can convert the output code to a rendered diagram by going to http://flowchart.js.org or using editors like Typora. You can also directly ouput the generated flowchart.js DSL into an example html by adding the parameter ```-o output.html``` where you specify an output filename ending in .html or .htm
 
 **To specify a function (or a method in a class) to flowchartlize:**
 
@@ -103,7 +109,27 @@ cond2(no)->sub4
 sub4(right)->op1
 ```
 
-Then you can visit http://flowchart.js.org and translate the generated textual representation into SVG flow chart diagrams:
+If you don't like the flowchart flow direction you can tweak a condition by modifying with with directions such as:
+```
+st0=>start: start a_pyflow_test
+op1=>operation: do something
+cond2=>condition: Yes or No?
+io3=>inputoutput: output: something...
+e5=>end: end a_pyflow_test
+sub4=>subroutine: A Subroutine
+
+st0->op1
+op1->cond2
+cond2->
+cond2->
+cond2(yes,left)->io3
+io3->e5
+cond2(no,bottom)->sub4
+sub4(right)->op1
+```
+
+You can output this into a local html by specifying ```-o output.htm``` with an output filename such as ```-o my_flowcahrt.htm``` or ```-o function.html```. Opening this in your browser will let you visualize, tweak, click run to update the SVG flow chart diagrams. There are links to download the current visuals as a .SVG and .PNG. 
+Alternatively, you can visit http://flowchart.js.org and translate the generated textual representation into SVG flow chart diagrams:
 
 ![screenshot on flowchart.js page](docs/imgs/flowchart-js-org.png)
 
