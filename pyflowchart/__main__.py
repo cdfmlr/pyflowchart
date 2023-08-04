@@ -71,7 +71,8 @@ def output(flowchart_str: str, file_name: str | None, field: str) -> None:
         output_html(output_name=file_name, field_name=field, flowchart=flowchart_str)
     else:  # not supported
         print(flowchart_str)
-        print('\n*** Error: not supported output file format:', file_name)  # TODO: stderr
+        print(f'\n*** Error: {ext} is not a supported output file format.\n' +
+              f'    Currently only .htm or .html are supported.')  # TODO: stderr
 
 
 def main(code_file, field, inner, output_file, simplify, conds_align):
@@ -98,7 +99,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-f', '--field', default="", type=str, help="field to draw flowchart. (e.g. Class.method)")
     parser.add_argument('-i', '--inner', action="store_true", help="parse the body of field")
-    parser.add_argument('-o', '--output', default="", type=str, help="Output HTML file with flowchart")
+    parser.add_argument('-o', '--output', default="", type=str, help="Output the flowchart to specific file with a format indicating by the extension name. (available: *.html)")
     parser.add_argument('--no-simplify', action="store_false", help="do not simplify the one-line-body If/Loop")
     parser.add_argument('--conds-align', action="store_true", help="align consecutive If statements")
 
