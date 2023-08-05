@@ -4,8 +4,8 @@ def output_html(output_name: str, field_name: str, flowchart: str) -> None:
     """
     This function outputting flowchart as html.
 
-    This is straight up https://github.com/adrai/flowchart.js/blob/master/example/index.html
-    with minor color and size changes.
+    This is derived from https://github.com/adrai/flowchart.js/blob/master/example/index.html
+    and https://stackoverflow.com/a/64800570 with minor color and size changes.
 
     Use of this source code is governed by a MIT
     license that can be found in https://github.com/adrai/flowchart.js/blob/master/license
