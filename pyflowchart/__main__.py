@@ -11,7 +11,7 @@ import argparse
 import chardet
 
 from pyflowchart.flowchart import Flowchart
-
+from pyflowchart.output_html import output_html
 
 def detect_decode(file_content: bytes) -> str:
     """detect_decode detect the encoding of file_content,
@@ -50,7 +50,32 @@ def detect_decode(file_content: bytes) -> str:
     return content
 
 
-def main(code_file, field, inner, simplify, conds_align):
+def output(flowchart_str: str, file_name: str | None, field: str) -> None:
+    """output convert & write the flowchart into a file.
+
+    Args:
+        flowchart: the generated flowchart to write.
+        file_name: path to the target file. 
+                    - '' or None for stdout.
+                    - '*.html' or '*.htm' for HTML.
+        field_name: the field of flowchart.
+
+    """
+    if not file_name:  # stdout
+        print(flowchart_str)
+        return
+
+    ext = file_name.split('.')[-1]
+
+    if ext in ['html', 'htm']:
+        output_html(output_name=file_name, field_name=field, flowchart=flowchart_str)
+    else:  # not supported
+        print(flowchart_str)
+        print(f'\n*** Error: {ext} is not a supported output file format.\n' +
+              f'    Currently only .htm or .html are supported.')  # TODO: stderr
+
+
+def main(code_file, field, inner, output_file, simplify, conds_align):
     # read file content: binary
     file_content: bytes = code_file.read()
     # detect encoding and decode file content by detected encoding
@@ -61,8 +86,10 @@ def main(code_file, field, inner, simplify, conds_align):
                                     inner=inner,
                                     simplify=simplify,
                                     conds_align=conds_align)
-    print(flowchart.flowchart())
 
+    # not output (-o): plain -> stdout
+    # output='*.html': output_html 
+    output(flowchart.flowchart(), output_file, field)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Python code to flowchart.')
@@ -72,6 +99,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-f', '--field', default="", type=str, help="field to draw flowchart. (e.g. Class.method)")
     parser.add_argument('-i', '--inner', action="store_true", help="parse the body of field")
+    parser.add_argument('-o', '--output', default="", type=str, help="Output the flowchart to specific file with a format indicating by the extension name. (available: *.html)")
     parser.add_argument('--no-simplify', action="store_false", help="do not simplify the one-line-body If/Loop")
     parser.add_argument('--conds-align', action="store_true", help="align consecutive If statements")
 
@@ -80,4 +108,4 @@ if __name__ == '__main__':
     if not args.field:  # field="", parse the whole file (ast Module), should use the body
         args.inner = True
 
-    main(args.code_file, args.field, args.inner, args.no_simplify, args.conds_align)
+    main(args.code_file, args.field, args.inner, args.output, args.no_simplify, args.conds_align)

@@ -7,7 +7,7 @@ PyFlowchart is a Python package that lets you:
 - Write flowcharts in Python.
 - Translate Python source code into flowcharts.
 
-PyFlowchart produces flowcharts in the [flowchart.js](https://github.com/adrai/flowchart.js)  flowchart DSL, a widely used textual representation of flowcharts. You can convert these flowcharts to images using [flowchart.js.org](http://flowchart.js.org), [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart), or some markdown editors.
+PyFlowchart produces flowcharts in the [flowchart.js](https://github.com/adrai/flowchart.js)  flowchart DSL, a widely used textual representation of flowcharts. You can convert these flowcharts to images using [flowchart.js.org](http://flowchart.js.org), [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart), or some markdown editors. Alternatively, we  also support an option to output the generated flowchart into a interactive HTML page.
 
 ## Get PyFlowchart
 
@@ -23,11 +23,20 @@ Want to **flowchart your Python code in `example.py`?** Run this:
 $ python -m pyflowchart example.py
 ```
 
-> ⚠️ PyFlowchart works with **Python 3.7+**. To check your Python version, run [`python --version`](https://docs.python.org/3/using/cmdline.html#cmdoption-version). 
+> ⚠️ PyFlowchart works with **Python 3.7+**. To check your Python version, run [`python --version`](https://docs.python.org/3/using/cmdline.html#cmdoption-version).
 >
 > If you have both Python 2 and Python 3 installed, you may need to use `python3` instead of `python`. This is becoming less common as [Python 2 is sunsetting](https://www.python.org/doc/sunset-python-2/).
 
 PyFlowchart will output the generated flowchart.js DSL. You can convert the output code to a rendered diagram by going to http://flowchart.js.org or using editors like Typora.
+
+**To output a HTML file** containing the generated flowchart:
+
+```sh
+$ python -m pyflowchart example.py -o example.html
+$ # open example.html
+```
+
+Open `example.html` in your browser to see the output in graphical representation.
 
 **To specify a function (or a method in a class) to flowchartlize:**
 
@@ -103,9 +112,15 @@ cond2(no)->sub4
 sub4(right)->op1
 ```
 
-Then you can visit http://flowchart.js.org and translate the generated textual representation into SVG flow chart diagrams:
+You can visit http://flowchart.js.org and translate the generated textual representation into SVG flow chart diagrams:
 
 ![screenshot on flowchart.js page](docs/imgs/flowchart-js-org.png)
+
+(v0.3.0) You can also use `pyflowchart.output_html` to generate a page similar to the picture above:
+
+```python
+output_html('output.html', 'a_pyflow_test', fc.flowchart())
+```
 
 By the way, many Markdown editors, like Typora, also support this flowchart syntax. For more information, see [the Typora documentation on flowcharts]((https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts)). If you prefer the command line, you can use [francoislaberge/diagrams]((https://github.com/francoislaberge/diagrams/#flowchart)).
 
@@ -195,16 +210,19 @@ Flowchart.from_code(code, field="", inner=True, simplify=True, conds_align=False
 - `simplify`: If `True`, simple If and Loop statements will be simplified. For example, an If statement with a single expression will be converted into a single node.
 - `conds_align`: If `True`, consecutive If statements will be aligned in the flowchart.
 
-PyFlowchart CLI is a 1:1 interface for this function:
+PyFlowchart CLI is an interface for this function:
 
 ```sh
-python -m pyflowchart [-f FIELD] [-i] [--no-simplify] [--conds-align] code_file
+python -m pyflowchart [-f FIELD] [-i] [--no-simplify] [--conds-align] [-o OUTPUT] code_file
 ```
 
 - `-f FIELD`: The name of the field to be converted into a flowchart.
 - `-i`:  If specified, the body of the field will be parsed as a nested flowchart.
 - `--no-simplify`:  If specified, the If and Loop statements will not be simplified.
 - `--conds-align`: If specified, consecutive If statements will be aligned in the flowchart.
+- `-o OUTPUT`: If specified, output the flowchart to specific file with a format indicating by the extension name. (only support `*.html` for now)
+
+⚠️ `-o` is not a part of `Flowchart.from_code`. It's `from pyflowchar import output_html`.
 
 ### field
 
@@ -321,9 +339,30 @@ op_end
 
 **Note:** This feature is still in beta and may not work perfectly in all cases.
 
+### output html and images
+
+You can also directly ouput the generated flowchart.js DSL into an html by adding the parameter ```-o output.html``` where you specify an output filename ending in `.html` or `.htm`.
+
+![output-html](docs/imgs/output-html.png)
+
+Opening the `output.html` in your browser will let you visualize the diagrams. You can tweak the code and click run to update the diagram. There are also links to download the current visuals as a  `.svg` or `.png` image.
+
+⚠️ The output file specified will overwrite any file that already has that name.
+
+🐍 To use this feature via Python instead of CLI, call `output_html(output_name: str, field_name: str, flowchart: str) -> None`:
+
+```py
+>>> import pyflowchart
+>>> help(pyflowchart.output_html)
+```
+
 ## Beautify Flowcharts
 
 The flowcharts generated by PyFlowchart may not always be perfect. In these cases, you can modify the generated flowchart code yourself or consider making your Python source code more clear. Clear and beautiful Python source code will result in more beautiful flowcharts generated by PyFlowchart.
+
+An example: If you don't like the flowchart flow direction you can tweak a condition by modifying with with directions such as:
+
+![beautify-flowchart-example](docs/imgs/beautify-example.png)
 
 ## TODOs
 
