@@ -7,6 +7,7 @@ license that can be found in the LICENSE file.
 """
 
 import argparse
+from typing import Optional
 
 import chardet
 
@@ -50,7 +51,7 @@ def detect_decode(file_content: bytes) -> str:
     return content
 
 
-def output(flowchart_str: str, file_name: str | None, field: str) -> None:
+def output(flowchart_str: str, file_name: Optional[str], field: str) -> None:
     """output convert & write the flowchart into a file.
 
     Args:
