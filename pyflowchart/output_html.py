@@ -1,5 +1,6 @@
 import os
 
+
 def output_html(output_name: str, field_name: str, flowchart: str) -> None:
     """
     This function outputting flowchart as html.
@@ -17,12 +18,12 @@ def output_html(output_name: str, field_name: str, flowchart: str) -> None:
     """
 
     # Three raw html code sections encapsulated in triple quotes """
-    html_part_before_title="""<!DOCTYPE html>
+    html_part_before_title = """<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8">
         <title>"""
-    html_part_after_title_before_code_block="""</title>
+    html_part_after_title_before_code_block = """</title>
         <style type="text/css">
           .end-element { fill : #FFCCFF; }
         </style>
@@ -36,7 +37,7 @@ def output_html(output_name: str, field_name: str, flowchart: str) -> None:
                 var btn = document.getElementById("run"),
                     cd = document.getElementById("code"),
                     chart;
-					
+                    
                 (btn.onclick = function () {
                     var code = cd.value;
 
@@ -66,11 +67,11 @@ def output_html(output_name: str, field_name: str, flowchart: str) -> None:
                       'scale': 1,
                       'symbols': {
                         'start': {
-						  'font-size': 14,
+                          'font-size': 14,
                           'font-color': 'yellow',
                           'element-color': 'blue',
                           'fill': 'green',
-						  'class': 'start-element'
+                          'class': 'start-element'
                         },
                         'inputoutput': {
                           'font-color': 'black',
@@ -89,11 +90,11 @@ def output_html(output_name: str, field_name: str, flowchart: str) -> None:
                         },
                         'condition': {
                           'font-color': 'red',
-						  'element-color': 'black',
+                          'element-color': 'black',
                           'fill': 'yellow'
                         },
                         'end':{
-						  'font-size': 20,
+                          'font-size': 20,
                           'class': 'end-element'
                         }
                       },
@@ -107,42 +108,42 @@ def output_html(output_name: str, field_name: str, flowchart: str) -> None:
                         'rejected' : { 'fill' : '#C45879', 'font-size' : 12, 'yes-text' : 'n/a', 'no-text' : 'REJECTED' }
                       }
                     });
-					//create base64 encoding of SVG to generate download link for title(without html or htm).SVG
-					var currentCanvasDIV = document.getElementById('canvas')
-					var currentDrawSVG = currentCanvasDIV.innerHTML.replaceAll('ë','e');
+                    //create base64 encoding of SVG to generate download link for title(without html or htm).SVG
+                    var currentCanvasDIV = document.getElementById('canvas')
+                    var currentDrawSVG = currentCanvasDIV.innerHTML.replaceAll('ë','e');
 
-					const OUTsvgBASE64 = btoa(currentDrawSVG)
-					doctitle = document.title.replace('.html','');
-					doctitle = doctitle.replace('.htm','');
+                    const OUTsvgBASE64 = btoa(currentDrawSVG)
+                    doctitle = document.title.replace('.html','');
+                    doctitle = doctitle.replace('.htm','');
 
 
-					var currentCanvasDIV = document.getElementById('canvas')
-					var currentDrawSVG = currentCanvasDIV.innerHTML.replaceAll('ë','e');
-					svgSource = currentDrawSVG
-					svgXML = currentDrawSVG;
-					// Use SVG Height and Width from the SVG XML to set canvas size
-					svgXMLsubstringHeight = svgXML.substring(svgXML.indexOf('height='), svgXML.indexOf('version='));
-					svgXMLsubstringWidth = svgXML.substring(svgXML.indexOf('width='), svgXML.indexOf('xmlns='));
-					HeightValue = svgXMLsubstringHeight.substring(svgXMLsubstringHeight.indexOf('"')+1,svgXMLsubstringHeight.lastIndexOf('"'));
-					WidthValue = svgXMLsubstringWidth.substring(svgXMLsubstringWidth.indexOf('"')+1,svgXMLsubstringWidth.lastIndexOf('"'));
-					HeightValueInt = Math.round(HeightValue)
-					WidthValueInt = Math.round(WidthValue)
-					// setup input for base64SvgToBase64Png
-					let svgSrc = "data:image/svg+xml;base64,"+OUTsvgBASE64;
-					var pngBase
-					imageUtil.base64SvgToBase64Png(svgSrc, WidthValueInt, HeightValueInt).then(pngSrc => {
-					pngBase = pngSrc
-					// output download link for base64 PNG converted on download from base64
-					var pngOutHtml = `<a href="${pngBase}" download="${doctitle}.png">PNG - Click here to download current rendered flowchart as ${doctitle}.png</a>`
-					document.getElementById("pngbase64").innerHTML=pngOutHtml;
-					});	
-					// output download link for base64 SVG converted on download from base64
-					var svgOutHtml = `<a href="data:image/svg+xml;base64,${OUTsvgBASE64}" download=${doctitle}.svg>SVG - Click here to download current rendered flowchart as ${doctitle}.svg</a> `
-						document.getElementById("svgbase64").innerHTML=svgOutHtml;
-					})();
+                    var currentCanvasDIV = document.getElementById('canvas')
+                    var currentDrawSVG = currentCanvasDIV.innerHTML.replaceAll('ë','e');
+                    svgSource = currentDrawSVG
+                    svgXML = currentDrawSVG;
+                    // Use SVG Height and Width from the SVG XML to set canvas size
+                    svgXMLsubstringHeight = svgXML.substring(svgXML.indexOf('height='), svgXML.indexOf('version='));
+                    svgXMLsubstringWidth = svgXML.substring(svgXML.indexOf('width='), svgXML.indexOf('xmlns='));
+                    HeightValue = svgXMLsubstringHeight.substring(svgXMLsubstringHeight.indexOf('"')+1,svgXMLsubstringHeight.lastIndexOf('"'));
+                    WidthValue = svgXMLsubstringWidth.substring(svgXMLsubstringWidth.indexOf('"')+1,svgXMLsubstringWidth.lastIndexOf('"'));
+                    HeightValueInt = Math.round(HeightValue)
+                    WidthValueInt = Math.round(WidthValue)
+                    // setup input for base64SvgToBase64Png
+                    let svgSrc = "data:image/svg+xml;base64,"+OUTsvgBASE64;
+                    var pngBase
+                    imageUtil.base64SvgToBase64Png(svgSrc, WidthValueInt, HeightValueInt).then(pngSrc => {
+                    pngBase = pngSrc
+                    // output download link for base64 PNG converted on download from base64
+                    var pngOutHtml = `<a href="${pngBase}" download="${doctitle}.png">PNG - Click here to download current rendered flowchart as ${doctitle}.png</a>`
+                    document.getElementById("pngbase64").innerHTML=pngOutHtml;
+                    });    
+                    // output download link for base64 SVG converted on download from base64
+                    var svgOutHtml = `<a href="data:image/svg+xml;base64,${OUTsvgBASE64}" download=${doctitle}.svg>SVG - Click here to download current rendered flowchart as ${doctitle}.svg</a> `
+                        document.getElementById("svgbase64").innerHTML=svgOutHtml;
+                    })();
 
-							};
-				 
+                            };
+                 
 
 // derived from https://stackoverflow.com/a/64800570
 // we need to use web browser canvas to generate a image. In this case png
@@ -156,7 +157,7 @@ let imageUtil = {};
  */
 imageUtil.base64SvgToBase64Png = function (originalBase64, width, height, secondTry) {
     return new Promise(resolve => {
-		let img = document.createElement('img');
+        let img = document.createElement('img');
         img.onload = function () {
             if (!secondTry && (img.naturalWidth === 0 || img.naturalHeight === 0)) {
                 let svgDoc = base64ToSvgDocument(originalBase64);
@@ -213,28 +214,28 @@ function base64ToSvgDocument(base64) {
 } 
         </script>
 
-		<script>
-			function HelpText() {
-			  var x = document.getElementById("HelpTextBlock");
-			  if (x.style.display === "none") {
-				x.style.display = "block";
-			  } else {
-				x.style.display = "none";
-			  }
-			}
-		</script>
+        <script>
+            function HelpText() {
+              var x = document.getElementById("HelpTextBlock");
+              if (x.style.display === "none") {
+                x.style.display = "block";
+              } else {
+                x.style.display = "none";
+              }
+            }
+        </script>
     </head>
     <body>
         <div><textarea id="code" style="width: 100%;" rows="11">"""
 
-    html_part_after_code_block_remaining_html="""</textarea></div>
+    html_part_after_code_block_remaining_html = """</textarea></div>
         <div><button id="run" type="button">Run</button> <button onclick="HelpText()">Format Help</button></div>
-		<div id="HelpTextBlock" style="display:none"><br/>Conditions can also be redirected like cond(yes, bottom) or cond(yes, right)
+        <div id="HelpTextBlock" style="display:none"><br/>Conditions can also be redirected like cond(yes, bottom) or cond(yes, right)
 ... and the other symbols too... like sub1(right)<br/>
 You can also tweak the <b>diagram.drawSVG('diagram', {});</b> script in this file for more changes<br/>
 This is based on <a href="https://github.com/adrai/flowchart.js">flowchart.js on github</a> and <a href="http://flowchart.js.org">http://flowchart.js.org</a> more documentation can be found over there.
 </div><br/><div id="svgbase64"></div>
-		<div id="pngbase64"></div>
+        <div id="pngbase64"></div>
 
         <div id="canvas"></div>
     </body>

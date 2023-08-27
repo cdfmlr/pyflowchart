@@ -14,11 +14,12 @@ import chardet
 from pyflowchart.flowchart import Flowchart
 from pyflowchart.output_html import output_html
 
+
 def detect_decode(file_content: bytes) -> str:
     """detect_decode detect the encoding of file_content,
      then decode file_content on the detected encoding.
 
-    If the confidence of detect result is less then 0.9,
+    If the confidence of detect result is less than 0.9,
     the UTF-8 will be used to decode. PyFlowchart is
     designed to convert Python 3 codes into flowcharts.
     And Python 3 is coding in UTF-8 in default. So only
@@ -55,12 +56,11 @@ def output(flowchart_str: str, file_name: Optional[str], field: str) -> None:
     """output convert & write the flowchart into a file.
 
     Args:
-        flowchart: the generated flowchart to write.
+        flowchart_str: the generated flowchart to write.
         file_name: path to the target file. 
                     - '' or None for stdout.
                     - '*.html' or '*.htm' for HTML.
-        field_name: the field of flowchart.
-
+        field: the field of flowchart.
     """
     if not file_name:  # stdout
         print(flowchart_str)
@@ -92,6 +92,7 @@ def main(code_file, field, inner, output_file, simplify, conds_align):
     # output='*.html': output_html 
     output(flowchart.flowchart(), output_file, field)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Python code to flowchart.')
 
@@ -100,7 +101,9 @@ if __name__ == '__main__':
 
     parser.add_argument('-f', '--field', default="", type=str, help="field to draw flowchart. (e.g. Class.method)")
     parser.add_argument('-i', '--inner', action="store_true", help="parse the body of field")
-    parser.add_argument('-o', '--output', default="", type=str, help="Output the flowchart to specific file with a format indicating by the extension name. (available: *.html)")
+    parser.add_argument('-o', '--output', default="", type=str,
+                        help="Output the flowchart to specific file with a format indicating by the extension name. ("
+                             "available: *.html)")
     parser.add_argument('--no-simplify', action="store_false", help="do not simplify the one-line-body If/Loop")
     parser.add_argument('--conds-align', action="store_true", help="align consecutive If statements")
 
