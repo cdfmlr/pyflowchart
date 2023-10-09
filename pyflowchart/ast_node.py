@@ -10,9 +10,25 @@ license that can be found in the LICENSE file.
 import _ast
 from typing import List, Tuple
 
-import astunparse
-
 from pyflowchart.node import *
+
+# import astunparse
+#
+# `astunparse` is a third-party package, that provides a function `unparse` to translate AST into Python source code.
+# This function is included in Python 3.9 std lib as `ast.unparse`.
+# And there are bugs to continue to use `astunparse` in Python 3.9+.
+# So here: we use `astunparse` in Python 3.8- and `ast.unparse` in Python 3.9+.
+#
+# See also:
+#  - https://github.com/cdfmlr/pyflowchart/issues/28
+#  - https://github.com/simonpercivall/astunparse/issues/56#issuecomment-1438353347
+#  - https://docs.python.org/3/library/ast.html#ast.unparse
+import sys
+
+if sys.version_info < (3, 9):
+    import astunparse
+else:
+    import ast as astunparse
 
 
 # TODO: beautify tail connection direction

@@ -14,10 +14,16 @@ import ast
 import re
 import unittest
 
-import astunparse
-
 from pyflowchart.ast_node import *
 from pyflowchart.flowchart import *
+
+# import astunparse # https://github.com/cdfmlr/pyflowchart/issues/28
+import sys
+
+if sys.version_info < (3, 9):
+    import astunparse
+else:
+    import ast as astunparse
 
 
 def flowchart_translate_test(name='flowchart test'):
@@ -433,6 +439,21 @@ class PyflowchartTestCase(unittest.TestCase):
         flowchart = flowchart.strip()
         # ignores node id
         flowchart = re.sub(r'\d+', '*', flowchart)
+
+        # ignores brackets
+        flowchart_updated = ''
+        for line in flowchart.splitlines():
+            parts = line.split(':')
+            for i in range(1, len(parts)):
+                parts[i] = parts[i].replace('(', ' ')
+                parts[i] = parts[i].replace(')', ' ')
+            line = ':'.join(parts)
+            flowchart_updated += line + '\n'
+        flowchart = flowchart_updated
+
+        # multiple spaces to one
+        flowchart = re.sub(r'\s+', r' ', flowchart)
+
         return flowchart
 
     def test_flowchart_translate(self):
