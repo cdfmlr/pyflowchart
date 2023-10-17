@@ -197,13 +197,15 @@ class LoopCondition(AstConditionNode):
         """
         one_line_body = False
         try:
-            loop_body = self.connection_yes
+            if not self.connection_yes or not isinstance(self.connection_yes, Connection):
+                return False
+            loop_body = self.connection_yes.next_node
             one_line_body = isinstance(loop_body, CondYN) and \
                             isinstance(loop_body.sub, Node) and \
                             not isinstance(loop_body.sub, NodesGroup) and \
                             not isinstance(loop_body.sub, ConditionNode) and \
                             len(loop_body.sub.connections) == 1 and \
-                            loop_body.sub.connections[0] == self
+                            loop_body.sub.connections[0].next_node == self
         except Exception as e:
             print(e)
         return one_line_body
@@ -261,15 +263,16 @@ class Loop(NodesGroup, AstNode):
             noop = SubroutineNode("no-op")
             noop.set_connect_direction("left")
             noop.connect(self.cond_node)
-            self.cond_node.connection_yes(noop)
+            self.cond_node.connect_yes(noop)
 
     def _virtual_no_tail(self) -> None:
-        virtual_no = CondYN(self, CondYN.NO)
+        # virtual_no = NopNode(parent=self.cond_node)
+        # virtual_no = CondYN(self, CondYN.NO)
+        virtual_no = None
+        self.cond_node.connect_no(virtual_no)
 
-        self.cond_node.connection_no = virtual_no
-        self.cond_node.connections.append(virtual_no)
-
-        self.append_tails(virtual_no)
+        self.append_tails(self.cond_node.connection_no.next_node)
+        pass
 
     # def connect(self, sub_node) -> None:
     #     self.cond_node.connect_no(sub_node)
@@ -289,7 +292,8 @@ class Loop(NodesGroup, AstNode):
         try:
             if self.cond_node.is_one_line_body():  # simplify
                 cond = self.cond_node
-                body = self.cond_node.connection_yes.sub
+                assert isinstance(self.cond_node.connection_yes.next_node, CondYN)
+                body = self.cond_node.connection_yes.next_node.sub
 
                 simplified = OperationNode(f'{body.node_text} while {cond.node_text.lstrip("for").lstrip("while")}')
 
@@ -319,12 +323,13 @@ class IfCondition(AstConditionNode):
         """
         one_line_body = False
         try:
-            yes = self.connection_yes
-            one_line_body = isinstance(yes, CondYN) and \
-                            isinstance(yes.sub, Node) and \
-                            not isinstance(yes.sub, NodesGroup) and \
-                            not isinstance(yes.sub, ConditionNode) and \
-                            not yes.sub.connections
+            conn_yes = self.connection_yes
+            one_line_body = isinstance(conn_yes, Connection) and \
+                            isinstance(conn_yes.next_node, CondYN) and \
+                            isinstance(conn_yes.next_node.sub, Node) and \
+                            not isinstance(conn_yes.next_node.sub, NodesGroup) and \
+                            not isinstance(conn_yes.next_node.sub, ConditionNode) and \
+                            not conn_yes.next_node.sub.connections
         except Exception as e:
             print(e)
         return one_line_body
@@ -341,9 +346,10 @@ class IfCondition(AstConditionNode):
         """
         no_else = False
         try:
-            no = self.connection_no
-            no_else = isinstance(no, CondYN) and \
-                      not no.sub
+            conn2no = self.connection_no
+            no_else = isinstance(conn2no, Connection) and \
+                      isinstance(conn2no.next_node, CondYN) and \
+                      not conn2no.next_node.sub
         except Exception as e:
             print(e)
         return no_else
@@ -351,7 +357,7 @@ class IfCondition(AstConditionNode):
 
 class If(NodesGroup, AstNode):
     """
-    If is a AstNode for _ast.If (the if sentences in python source code)
+    If is a AstNode for _ast.If (the `if` sentences in python source code)
 
     This class is a NodesGroup that connects to IfCondition & if-body & else-body.
     """
@@ -381,7 +387,7 @@ class If(NodesGroup, AstNode):
         if kwargs.get("simplify", True):
             self.simplify()
         if kwargs.get("conds_align", False) and self.cond_node.is_no_else():
-            self.cond_node.connection_yes.set_connect_direction("right")
+            self.cond_node.connection_yes.set_param("right")
 
     def parse_if_body(self, **kwargs) -> None:
         """
@@ -396,11 +402,12 @@ class If(NodesGroup, AstNode):
             #         t.set_connect_direction("right")
             self.extend_tails(progress.tails)
         else:  # connect virtual connection_yes
-            virtual_yes = CondYN(self, CondYN.YES)
-            self.cond_node.connection_yes = virtual_yes
-            self.cond_node.connections.append(virtual_yes)
+            # virtual_yes = NopNode(parent=self.cond_node)
+            # virtual_yes = CondYN(self, CondYN.YES)
+            virtual_yes = None
+            self.cond_node.connect_yes(virtual_yes)
 
-            self.append_tails(virtual_yes)
+            self.append_tails(self.cond_node.connection_yes.next_node)
 
     def parse_else_body(self, **kwargs) -> None:
         """
@@ -412,11 +419,12 @@ class If(NodesGroup, AstNode):
             self.cond_node.connect_no(progress.head)
             self.extend_tails(progress.tails)
         else:  # connect virtual connection_no
-            virtual_no = CondYN(self, CondYN.NO)
-            self.cond_node.connection_no = virtual_no
-            self.cond_node.connections.append(virtual_no)
+            # virtual_no = NopNode(parent=self.cond_node)
+            # virtual_no = CondYN(self, CondYN.NO)
+            virtual_no = None
+            self.cond_node.connect_no(virtual_no)
 
-            self.append_tails(virtual_no)
+            self.append_tails(self.cond_node.connection_no.next_node)
 
     def simplify(self) -> None:
         """simplify the one-line body case:
@@ -434,7 +442,11 @@ class If(NodesGroup, AstNode):
         try:
             if self.cond_node.is_no_else() and self.cond_node.is_one_line_body():  # simplify
                 cond = self.cond_node
-                body = self.cond_node.connection_yes.sub
+                if not cond.connection_yes:
+                    return
+
+                assert isinstance(self.cond_node.connection_yes.next_node, CondYN)
+                body = self.cond_node.connection_yes.next_node.sub
 
                 simplified = OperationNode(f'{body.node_text} if {cond.node_text.lstrip("if")}')
 
@@ -574,7 +586,7 @@ class Return(NodesGroup, AstNode):
             self.output_node.connect(self.end_node)
             self.head = self.output_node
 
-        self.connections.append(self.head)
+        self.connections.append(Connection(self.head))
 
         NodesGroup.__init__(self, self.head, [self.end_node])
 

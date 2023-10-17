@@ -52,8 +52,6 @@ e4=>end: end end
 
 st0->op1
 op1->cond2
-cond2->
-cond2->
 cond2(yes)->io3
 io3->e4
 cond2(no)->op1
@@ -452,44 +450,53 @@ class PyflowchartTestCase(unittest.TestCase):
         flowchart = flowchart_updated
 
         # multiple spaces to one
-        flowchart = re.sub(r'\s+', r' ', flowchart)
+        flowchart = re.sub(r'\t+', r' ', flowchart)
 
         return flowchart
 
     def test_flowchart_translate(self):
         got = flowchart_translate_test()
+        print(got)
         self.assertEqualFlowchart(got, EXPECTED_FLOWCHART_TRANSLATE_TEST)
 
     def test_seq(self):
         got = seq_test()
+        print(got)
         self.assertEqualFlowchart(got, EXPECTED_SEQ_TEST)
 
     def test_loop(self):
         got = loop_test()
+        print(got)
         self.assertEqualFlowchart(got, EXPECTED_LOOP_TEST)
 
     def test_if(self):
         got = if_test()
+        print(got)
         self.assertEqualFlowchart(got, EXPECTED_IF_TEST)
 
     def test_cond_loop(self):
         got = cond_loop_test()
+        print(got)
         self.assertEqualFlowchart(got, EXPECTED_COND_LOOP_TEST)
 
     def test_func(self):
         got = func_test()
+        print(got)
         self.assertEqualFlowchart(got, EXPECTED_FUNC_TEST)
 
     def test_from_code(self):
         got = from_code_test()
+        print(got)
         self.assertEqualFlowchart(got, EXPECTED_FROM_CODE_TEST)
 
     def test_simplify_off(self):
         got = simplify_off_test()
+        print(got)
         self.assertEqualFlowchart(got, EXPECTED_SIMPLIFY_OFF_TEST)
 
     def test_simplify_on(self):
         got = simplify_on_test()
+        print(got)
         self.assertEqualFlowchart(got, EXPECTED_SIMPLIFY_ON_TEST)
 
 
