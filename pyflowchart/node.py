@@ -11,18 +11,7 @@ license that can be found in the LICENSE file.
 import time
 import uuid
 import itertools  # for count
-from typing import Dict, List, TypeVar
-
-# TODO(v1.0): Noticing that all connections look like `xxx(params)->yyy`,
-#       where params maybe something like `right`, `yes`, or `yes,right`,
-#       A good idea is to make a new class Connection as:
-#           class Connection(object):
-#               next_node: Node
-#               params: dict
-#       It helps to customize the directions of connections and we may not even
-#       need a CondYN anymore!
-#       But this changes a lot and seems not necessary now. So it's maybe a
-#       further version 1.0 job to achieve this.
+from typing import List, TypeVar
 
 # AsNode is a TypeVar for Node and its subclasses
 AsNode = TypeVar('AsNode', bound='Node')
@@ -85,7 +74,8 @@ class Node(object):
                 connection.params.append(self.connect_direction)
                 fc_conn_str += connection.fc_connection(self)
             else:
-                debug(f'Warning: Node.fc_connection: unexpected connection: {connection}')
+                # debug(f'Warning: Node.fc_connection: unexpected connection: {connection}')
+                pass
         return fc_conn_str
 
     def _traverse(self, func, visited_flag) -> None:
@@ -106,17 +96,18 @@ class Node(object):
             return
 
         self.__visited = visited_flag
-        debug(f"Node._traverse: {self}, func={func}, visited_flag={visited_flag}")
+        # debug(f"Node._traverse: {self}, func={func}, visited_flag={visited_flag}")
         to_be_continue = func(self)
         if not to_be_continue:
             return
 
         for c in self.connections:
-            debug(f"Node._traverse: {self} to {c}")
+            # debug(f"Node._traverse: {self} to {c}")
             if isinstance(c, Connection) and isinstance(c.next_node, Node):
                 c.next_node._traverse(func, visited_flag)
             else:
-                debug(f'Warning: Node._traverse: unexpected connection: {c}')
+                # debug(f'Warning: Node._traverse: unexpected connection: {c}')
+                pass
 
     def connect(self, sub_node: AsNode, direction='') -> None:
         """connect: self->sub_node
@@ -203,7 +194,7 @@ class Connection(object):
             a flowchart.js node connection string: "node_name->sub_node_name"
         """
         if not isinstance(src_node, Node):
-            debug(f"Connection.fc_connection: unexpected src_node: {src_node}, return empty string")
+            # debug(f"Connection.fc_connection: unexpected src_node: {src_node}, return empty string")
             return ""
         # assert isinstance(self.next_node, Node) or self.next_node is None
 
@@ -217,7 +208,7 @@ class Connection(object):
             fc_conn_str += f'{src_node.node_name}{specification}->{self.next_node.node_name}\n'
         # else (self.next_node is None): fc_conn_str = ''
 
-        debug(f"Connection.fc_connection: {fc_conn_str}")
+        # debug(f"Connection.fc_connection: {fc_conn_str}")
 
         return fc_conn_str
 
@@ -309,7 +300,7 @@ class NodesGroup(Node):
         Returns:
             always True
         """
-        debug(f"NodesGroup._add_node_fc: {node}, fc_definition={node.fc_definition()}, fc_connection={node.fc_connection()}")
+        # debug(f"NodesGroup._add_node_fc: {node}, fc_definition={node.fc_definition()}, fc_connection={node.fc_connection()}")
         self._fc_definitions += node.fc_definition()
         self._fc_connections += node.fc_connection()
 
@@ -442,12 +433,96 @@ class ConditionNode(Node):
         self.set_param('align-next', 'no')
 
 
-class CondYN(Node):
+class TransparentNode(Node):
+    """TransparentNode is a Node subclass that
+    connects its parent and child directly.
+
+        parent_node -> transparent_node -> child_node
+
+    Resulting in a flowchart.js flowchart like this:
+
+        parent_node->child_node
+
+    This is useful to work with NodesGroups as a head or tail.
+
+    For example, consider a `if` block without `else`:
+
+        start()
+        if cond:
+            some_operation
+        end()
+
+    In the process of parse(), for the if-branch, we get an OperationNode("some_operation")
+    and this node will be added to the tails.
+    However, the else-branch is empty, but we still need to connect the `if` and `end`.
+    So we add a TransparentNode to the tails, and connect it to the `end`.
+
+    Similarly, Loops need this as a virtual tail, and MatchCases need this as a virtual head.
+
+    Notice: A TransparentNode has a single parent and a single child.
+            Later call to connect() will overwrite the previous child & connection & params.
+    """
+
+    def __init__(self, parent: Node, child: Node = None, connect_params: List[str] = None):
+        """CondYesNode is a Node subclass for flowchart.js `cond(yes|no)->sub`
+
+        Args:
+            parent: parent cond node
+            child: next_node, default None
+            connect_params: params of connection, default None
+        """
+        super().__init__()
+
+        self.parent = parent
+        self.child = child
+        self.connect_params = connect_params
+        self.connection = Connection(child, *connect_params)
+
+    @property
+    def connections(self):
+        return [self.connection]
+
+    @connections.setter
+    def connections(self, value):
+        """Should never be used.
+        Makes compiler happy. (`Node.__init__` writes this.)
+        """
+        if not value:
+            return
+        try:
+            self.connection = value[0]
+        except IndexError:
+            pass
+
+    def fc_definition(self) -> str:
+        return ''
+
+    def fc_connection(self) -> str:
+        assert isinstance(self.parent, Node)
+        assert isinstance(self.connection, Connection)
+        return self.connection.fc_connection(self.parent)
+
+    def connect(self, sub_node, *params: str) -> None:
+        self.child = sub_node
+        self.connect_params.extend(params)
+        self.connection = Connection(sub_node, *self.connect_params)
+
+
+class CondYN(TransparentNode):
     """CondYesNode is a Node subclass for flowchart.js `cond(yes|no)->sub`
 
     It is not an actual node in flowchart.js, but a middle connection.
     There are no definition ("node_name=>node_type: node_text") for CondYN.
     It just offers a connection ("cond(yes|no)->sub").
+
+    CondYN is TransparentNode:
+
+    CondYN is a subclass of Node directly in the history.
+    After the introduction of TransparentNode,
+    we rewrote CondYN as a subclass of TransparentNode,
+    keeps the same interface as before, for compatibility.
+
+    New codes should use TransparentNode instead of CondYN.
     """
 
     YES = 'yes'
@@ -461,48 +536,26 @@ class CondYN(Node):
             yn: CondYN.YES or CondYN.NO
             sub: next_node, default None
         """
-        super().__init__()
-
+        TransparentNode.__init__(self, cond, sub, [yn])
         # self.node_name = f'<CondYN: parent={cond}>'
 
-        self.cond = cond
-        self.yn = yn
-        self.sub = sub
+    # old interface
 
-        if isinstance(sub, Node):
-            self.connections = [Connection(sub, yn)]
+    @property
+    def cond(self):
+        return self.parent
 
-    def fc_definition(self) -> str:
-        return ''
+    @property
+    def yn(self):
+        return ",".join(self.connect_params) if self.connect_params else ""
 
-    def fc_connection(self) -> str:
-        if self.sub:
-            # direction = f', {self.connect_direction}' if self.connect_direction else ""
-            # specification = f'({self.yn}{direction})'
-            # return f'{self.cond.node_name}{specification}->{self.sub.node_name}\n'
-            connection = Connection(self.sub, self.yn)
+    @property
+    def sub(self):
+        return self.child
 
-            debug(f"CondYN.fc_connection: {connection.fc_connection(self.cond)}")
+    def connect(self, sub_node, *params: str) -> None:
+        # Historically, CondYN.connect() keeps the previous params.
+        params = list(params)
+        params.extend(self.connect_params)
 
-            return connection.fc_connection(self.cond)
-        return ""
-
-    def connect(self, sub_node, direction='') -> None:
-        if direction:
-            self.set_connect_direction(direction)
-        self.connections.append(Connection(sub_node, self.yn))
-        self.sub = sub_node
-
-
-class NopNode(Node):
-    def __init__(self, parent: Node):
-        super().__init__()
-        self.parent = parent
-
-    def fc_definition(self) -> str:
-        return ''
-
-    def fc_connection(self) -> str:
-        for c in self.connections:
-            if isinstance(c, Connection):
-                return c.fc_connection(self.parent)
+        TransparentNode.connect(self, sub_node, *params)
