@@ -11,7 +11,7 @@ license that can be found in the LICENSE file.
 import time
 import uuid
 import itertools  # for count
-from typing import List, TypeVar
+from typing import List, TypeVar, Optional
 
 # AsNode is a TypeVar for Node and its subclasses
 AsNode = TypeVar('AsNode', bound='Node')
@@ -227,8 +227,9 @@ class NodesGroup(Node):
     NodesGroup.connections is unused.
     """
 
-    def __init__(self, head_node: Node, tail_nodes=None):
+    def __init__(self, head_node: Optional[Node], tail_nodes=None):
         Node.__init__(self)
+        # special case: ParseProcessGraph: head == None
         if tail_nodes is None:
             tail_nodes = []
         self.head = head_node
@@ -406,18 +407,19 @@ class ConditionNode(Node):
         self.node_name = f'cond{self.id}'
         self.node_text = f'{cond}'
 
-        self.connection_yes: Connection = None
-        self.connection_no: Connection = None
+        self.connection_yes: Optional[Connection] = None
+        self.connection_no: Optional[Connection] = None
 
         if not align_next:
             self.no_align_next()
 
-    def connect_yes(self, yes_node: Node, direction: str = ''):
+    def connect_yes(self, yes_node: Optional[Node], direction: str = ''):
+        # yes_node is optional due to the virtual node is connecting to None
         condyn = CondYN(self, CondYN.YES, yes_node)
         self.connection_yes = Connection(condyn, 'yes', direction)
         self.connections.append(self.connection_yes)
 
-    def connect_no(self, no_node: Node, direction: str = ''):
+    def connect_no(self, no_node: Optional[Node], direction: str = ''):
         condyn = CondYN(self, CondYN.NO, no_node)
         self.connection_no = Connection(condyn, 'no', direction)
         self.connections.append(self.connection_no)

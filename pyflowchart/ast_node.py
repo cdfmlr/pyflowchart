@@ -8,7 +8,7 @@ license that can be found in the LICENSE file.
 """
 
 import _ast
-from typing import List, Tuple
+from typing import Tuple
 
 from pyflowchart.node import *
 
@@ -123,6 +123,8 @@ class FunctionDefArgsInput(AstNode, InputOutputNode):
 
     def func_args_str(self):
         # TODO(important): handle defaults, vararg, kwonlyargs, kw_defaults, kwarg
+        assert isinstance(self.ast_object, _ast.FunctionDef) or \
+               hasattr(self.ast_object, "args")
         args = []
         for arg in self.ast_object.args.args:
             args.append(str(arg.arg))
@@ -171,6 +173,8 @@ class FunctionDef(NodesGroup, AstNode):
             - body_head
             - body_tails
         """
+        assert isinstance(self.ast_object, _ast.FunctionDef) or \
+               hasattr(self.ast_object, "body")
         p = parse(self.ast_object.body, **kwargs)
         return p.head, p.tails
 
@@ -229,7 +233,7 @@ class Loop(NodesGroup, AstNode):
 
                 simplify={True | False}: simplify the one_line_body case?
                                            (Default: True)
-                                           See self.simplify
+                                           See `self.simplify`
         """
         AstNode.__init__(self, ast_loop, **kwargs)
 
@@ -246,8 +250,12 @@ class Loop(NodesGroup, AstNode):
 
     def parse_loop_body(self, **kwargs) -> None:
         """
-        Parse and Connect loop-body (a node graph) to self.cond_node (LoopCondition), extend self.tails with tails got.
+        Parse and Connect loop-body (a node graph) to self.cond_node (LoopCondition), extend `self.tails` with tails got.
         """
+        assert isinstance(self.ast_object, _ast.For) or \
+               isinstance(self.ast_object, _ast.While) or \
+               hasattr(self.ast_object, "body")
+
         progress = parse(self.ast_object.body, **kwargs)
 
         if progress.head is not None:
@@ -373,7 +381,7 @@ class If(NodesGroup, AstNode):
 
                 simplify={True | False}: simplify the one_line_body case?
                                            (Default: True)
-                                           See self.simplify
+                                           See `self.simplify`
         """
         AstNode.__init__(self, ast_if, **kwargs)
 
@@ -393,6 +401,9 @@ class If(NodesGroup, AstNode):
         """
         Parse and Connect if-body (a node graph) to self.cond_node (IfCondition).
         """
+        assert isinstance(self.ast_object, _ast.If) or \
+               hasattr(self.ast_object, "body")
+
         progress = parse(self.ast_object.body, **kwargs)
 
         if progress.head is not None:
@@ -413,6 +424,9 @@ class If(NodesGroup, AstNode):
         """
         Parse and Connect else-body (a node graph) to self.cond_node (IfCondition).
         """
+        assert isinstance(self.ast_object, _ast.If) or \
+               hasattr(self.ast_object, "orelse")
+
         progress = parse(self.ast_object.orelse, **kwargs)
 
         if progress.head is not None:
@@ -560,7 +574,7 @@ class Return(NodesGroup, AstNode):
     """
     ReturnEnd is a AstNode for _ast.Return (return sentence in python source code)
 
-    This class is a invisible virtual Node (i.e. NodesGroup) that connects to ReturnOutput & ReturnEnd.
+    This class is an invisible virtual Node (i.e. NodesGroup) that connects to ReturnOutput & ReturnEnd.
     """
 
     def __init__(self, ast_return: _ast.Return, **kwargs):
@@ -652,7 +666,7 @@ class ParseProcessGraph(NodesGroup):
 
 def parse(ast_list: List[_ast.AST], **kwargs) -> ParseProcessGraph:
     """
-    parse a ast_list (from _ast.Module/FunctionDef/For/If/etc.body)
+    parse an ast_list (from _ast.Module/FunctionDef/For/If/etc.body)
 
     Args:
         ast_list: a list of _ast.AST object
@@ -676,10 +690,9 @@ def parse(ast_list: List[_ast.AST], **kwargs) -> ParseProcessGraph:
 
         # special case: special stmt as a expr value. e.g. function call
         if type(ast_object) == _ast.Expr:
-            try:
+            if hasattr(ast_object, "value"):
                 ast_node_class = __special_stmts.get(type(ast_object.value), CommonOperation)
-            except AttributeError:
-                # ast_object has no value attribute
+            else:  # ast_object has no value attribute
                 ast_node_class = CommonOperation
 
         assert issubclass(ast_node_class, AstNode)
