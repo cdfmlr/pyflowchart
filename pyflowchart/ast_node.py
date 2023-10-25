@@ -8,6 +8,7 @@ license that can be found in the LICENSE file.
 """
 
 import _ast
+import typing
 from typing import Tuple
 
 from pyflowchart.node import *
@@ -623,6 +624,195 @@ class Return(NodesGroup, AstNode):
         pass
 
 
+#############
+#   Match   #
+#############
+
+# _ast_Match_t is a type alias to _ast.Match in Python 3.10+.
+# for old Python versions, it can be anything (_ast.AST).
+#
+# This is a workaround for the problem that
+# an _ast.NON_EXIST as a type hint will prevent the whole program from running:
+#     AttributeError: module '_ast' has no attribute 'Match'
+_ast_Match_t = _ast.AST
+if sys.version_info >= (3, 10):
+    _ast_Match_t = _ast.Match
+
+# similar to _ast_Match_t
+_ast_match_case_t = _ast.AST
+if sys.version_info >= (3, 10):
+    _ast_match_case_t = _ast.match_case
+
+
+class MatchCaseCondition(ConditionNode):
+    """
+    MatchCaseConditionNode is ConditionNode special for the condition of a case in match-case:
+
+        match {subject}:
+            case {pattern} if {guard}:
+                ...
+    """
+
+    def __init__(self, ast_match_case: _ast_match_case_t, subject: _ast.AST, **kwargs):
+        """
+        Args:
+            ast_match_case: instance of _ast.match_case
+            **kwargs: None
+        """
+        ConditionNode.__init__(self, cond=self.cond_expr(ast_match_case, subject))
+
+    @staticmethod
+    def cond_expr(ast_match_case: _ast_match_case_t, subject: _ast.AST) -> str:
+        """
+        cond_expr returns the condition expression of match-case sentence.
+
+            "if {subject} match case {pattern} [if {guard}]"
+        """
+        subject = astunparse.unparse(subject).strip()
+        pattern = astunparse.unparse(ast_match_case.pattern).strip()
+        guard = astunparse.unparse(ast_match_case.guard).strip() if ast_match_case.guard else None
+
+        s = f"if {subject} match case {pattern}"
+        if guard:
+            s += f" if {guard}"
+
+        return s
+
+
+class MatchCase(NodesGroup, AstNode):
+    """
+    MatchCase is a NodesGroup that connects to MatchCaseConditionNode & case-body.
+    It is from a case in match-case:
+        match {subject}:
+            case {pattern} if {guard}:
+                {body}
+    We parse it to an NodesGroup, that looks like an If without Else:
+        If (self, NodesGroup)
+            -> IfCondition('if {subject} match case {pattern} [if {guard}]') ->
+                -> yes -> [body]
+                -> no -> aTransparentNode
+    """
+
+    def __init__(self, ast_match_case: _ast_match_case_t, subject: _ast.AST, **kwargs):
+        AstNode.__init__(self, ast_match_case, **kwargs)
+
+        self.cond_node = MatchCaseCondition(ast_match_case, subject)
+
+        NodesGroup.__init__(self, self.cond_node)
+
+        self.parse_body(**kwargs)
+
+    def parse_body(self, **kwargs) -> None:
+        assert isinstance(self.ast_object, _ast.match_case) or \
+               hasattr(self.ast_object, "body")
+
+        progress = parse(self.ast_object.body)
+
+        if progress.head is not None:
+            self.cond_node.connect_yes(progress.head)
+            self.extend_tails(progress.tails)
+
+        # always connect a transparent node as the no-path
+        virtual_tail = TransparentNode(self.cond_node, connect_params=["no"])
+        self.cond_node.connect_no(virtual_tail)
+        self.append_tails(virtual_tail)
+
+
+class Match(NodesGroup, AstNode):
+    """
+    Match is a AstNode for _ast.Match (the `match-case` sentences in python source code)
+
+    This class is a NodesGroup that connects to MatchCondition & its cases.
+    """
+
+    def __init__(self, ast_match: _ast_Match_t, **kwargs):
+        """
+        Construct Match object will make following Node chain:
+            Match -> MatchCondition -> (case1) -> case1-path
+                                    -> (case2) -> case2-path
+                                    ...
+
+        A match-case sentence contains:
+
+            match {subject}:
+                case {pattern} if {guard}:
+                    {body}
+                case ...:
+                    ...
+
+        Args:
+            **kwargs:
+
+                simplify={True | False}: simplify the one_line_body case?
+                                           (Default: True)
+                                           See `self.simplify`
+        """
+        AstNode.__init__(self, ast_match, **kwargs)
+
+        # A Cond for match_case should be represented as "if {subject} match case {pattern}"
+        self.subject = ast_match.subject
+
+        # self.head = TransparentNode(self)
+        # fuck the multi inheritance,,, my brain is buffer overflowing
+        # god bless the jetbrains helped me figure out this overstep
+        # well, never mind. I believe that NodesGroup.__init__()
+        # is the right way to set it up as well as self.head properly.
+
+        # Each case is a condition node.
+        # Since we have not parsed any case body, (nor I want to peek one),
+        # here we use a transparent node as the head of the NodesGroup.
+        transparent_head = TransparentNode(self)
+        NodesGroup.__init__(self, transparent_head)
+        assert self.head is transparent_head
+
+        self.parse_cases(**kwargs)
+
+        # remove the transparent_head
+        try:
+            debug(f"Match.__init__() replace head: self.head before: {type(self.head)}: {self.head.__dict__}")
+            self.head = self.head.connections[0].next_node
+            debug(f"Match.__init__() replace head self.head after: {type(self.head)}: {self.head.__dict__}")
+        except IndexError or AttributeError:
+            self.head = CommonOperation(ast_match)
+            self.tails = [self.head]
+
+    def parse_cases(self, **kwargs) -> None:
+        """
+        Parse and Connect cases of the match
+        """
+        assert isinstance(self.ast_object, _ast.Match) or \
+               hasattr(self.ast_object, "cases")
+
+        last_case = self.head  # at first, it's a transparent node
+        for match_case in self.ast_object.cases:
+            match_case_node = MatchCase(match_case, self.subject, **kwargs)
+            last_case.connect(match_case_node)
+            last_case = match_case_node
+
+        # connect the last case to the end of the match
+        try:
+            self.tails.extend(last_case.tails)
+        except AttributeError:
+            self.tails.append(last_case)
+
+
+# With Python < 3.10, We have no _ast.Match and _ast.match_case,
+# unable to parse match-case sentence. Just trait it as a common sentence.
+# That is, unparse the whole match-case sentence, put the result into a OperationNode.
+#
+# DUCK, with Python 3.7, it is not possible for ast to parse match-case sentence:
+#     File "/Users/z/Projects/pyflowchart/pyflowchart/flowchart.py", line 94, in from_code
+#       code_ast = ast.parse(code)
+#     File "/Users/z/.pyenv/versions/3.7.17/lib/python3.7/ast.py", line 35, in parse
+#       return compile(source, filename, mode, PyCF_ONLY_AST)
+#     File "<unknown>", line 3
+#       match b:
+#         ^
+#     SyntaxError: invalid syntax
+# So, this is in vain.
+if sys.version_info < (3, 10):
+    Match = CommonOperation
+
 # Sentence: common | func | cond | loop | ctrl
 # - func: def
 # - cond: if
@@ -638,6 +828,7 @@ __func_stmts = {
 
 __cond_stmts = {
     _ast.If: If,
+    # _ast_Match_t: Match,  # need to check Python version, handle it later manually.
 }
 
 __loop_stmts = {
@@ -687,6 +878,9 @@ def parse(ast_list: List[_ast.AST], **kwargs) -> ParseProcessGraph:
     for ast_object in ast_list:
         # ast_node_class: some special AstNode subclass or CommonOperation by default.
         ast_node_class = __special_stmts.get(type(ast_object), CommonOperation)
+        # special: Match for Python 3.10+
+        if sys.version_info >= (3, 10) and type(ast_object) == _ast_Match_t:
+            ast_node_class = Match
 
         # special case: special stmt as a expr value. e.g. function call
         if type(ast_object) == _ast.Expr:

@@ -13,6 +13,7 @@ import _ast
 import ast
 import re
 import unittest
+import warnings
 
 from pyflowchart.ast_node import *
 from pyflowchart.flowchart import *
@@ -426,6 +427,97 @@ cond5->cond16
 '''
 
 
+def match_test():
+    if sys.version_info < (3, 10):
+        warnings.warn("match test requires python >= 3.10")
+        return ''
+    expr = '''
+def test_match(a, b, c):
+    if a > 0:
+        match b:
+            case 1:
+                print('ab')
+            case 2:
+                print('abc')
+                c = 1 + b + a
+            case 3:
+                print('nested match')
+                match c:
+                    case["a"]:
+                        print('a')
+                    case["a", *other_items]:
+                        print('a and others')
+                    case[*first_items, "d"] | (*first_items, "d"):
+                        print('d is the last item')
+            case _:
+                print('abcd')
+        end_of_match()
+    else:
+        alez()
+    end_of_ifs()
+    '''
+    expr_ast = ast.parse(expr)
+    p = parse(expr_ast.body)
+    flow = Flowchart(p.head).flowchart()
+    return flow
+
+
+EXPECTED_MATCH_TEST_PY_GE_310 = '''
+st3=>start: start test_match
+io5=>inputoutput: input: a, b, c
+cond9=>condition: if a > 0
+cond16=>condition: if b match case 1
+sub20=>subroutine: print('ab')
+cond25=>condition: if b match case 2
+sub29=>subroutine: print('abc')
+op31=>operation: c = 1 + b + a
+cond36=>condition: if b match case 3
+sub40=>subroutine: print('nested match')
+cond45=>condition: if c match case ['a']
+sub49=>subroutine: print('a')
+cond54=>condition: if c match case ['a', *other_items]
+sub58=>subroutine: print('a and others')
+cond63=>condition: if c match case [*first_items, 'd'] | [*first_items, 'd']
+sub67=>subroutine: print('d is the last item')
+cond75=>condition: if b match case _
+sub79=>subroutine: print('abcd')
+sub84=>subroutine: end_of_match()
+sub91=>subroutine: end_of_ifs()
+e93=>end: end test_match
+sub88=>subroutine: alez()
+
+st3->io5
+io5->cond9
+cond9(yes)->cond16
+cond16(yes)->sub20
+sub20->cond25
+cond25(yes)->sub29
+sub29->op31
+op31->cond36
+cond36(yes)->sub40
+sub40->cond45
+cond45(yes)->sub49
+sub49->cond54
+cond54(yes)->sub58
+sub58->cond63
+cond63(yes)->sub67
+sub67->cond75
+cond75(yes)->sub79
+sub79->sub84
+sub84->sub91
+sub91->e93
+cond75(no)->sub84
+cond63(no)->cond75
+cond54(no)->cond63
+cond45(no)->cond54
+cond36(no)->cond75
+cond25(no)->cond36
+cond16(no)->cond25
+cond9(no)->sub88
+sub88->sub91
+'''
+
+
 class PyflowchartTestCase(unittest.TestCase):
     def assertEqualFlowchart(self, got: str, expected: str):
         return self.assertEqual(
@@ -450,7 +542,7 @@ class PyflowchartTestCase(unittest.TestCase):
         flowchart = flowchart_updated
 
         # multiple spaces to one
-        flowchart = re.sub(r'\t+', r' ', flowchart)
+        flowchart = re.sub(r'[\t\s]+', r' ', flowchart)
 
         return flowchart
 
@@ -498,6 +590,14 @@ class PyflowchartTestCase(unittest.TestCase):
         got = simplify_on_test()
         print(got)
         self.assertEqualFlowchart(got, EXPECTED_SIMPLIFY_ON_TEST)
+
+    def test_match(self):
+        if sys.version_info < (3, 10):
+            warnings.warn("match test requires python >= 3.10")
+            return
+        got = match_test()
+        print(got)
+        self.assertEqualFlowchart(got, EXPECTED_MATCH_TEST_PY_GE_310)
 
 
 if __name__ == '__main__':

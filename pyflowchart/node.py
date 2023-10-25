@@ -16,10 +16,14 @@ from typing import List, TypeVar, Optional
 # AsNode is a TypeVar for Node and its subclasses
 AsNode = TypeVar('AsNode', bound='Node')
 
+__DEBUG = False
+
 
 def debug(*args, **kwargs):
-    # print(*args, **kwargs)
-    pass
+    if not __DEBUG:
+        return
+    import sys
+    print('DBG', *args, **kwargs, file=sys.stderr)
 
 
 class Node(object):
@@ -326,6 +330,26 @@ class NodesGroup(Node):
         """
         pass
 
+    @property
+    def node_name(self):
+        """
+        node_name of NodesGroup is the node_name of its head node.
+
+        Connection.fc_connection() relies on this property.
+        """
+        try:
+            return self.head.node_name
+        except AttributeError:  # before NodesGroup.__init__ done
+            return ''
+
+    @node_name.setter
+    def node_name(self, value):
+        # do nothing, proxy setting head's property is not only nonsense,
+        # but also wrong:
+        #  self.__init__() -> Node.__init__() -> self.node_name = ''
+        # this breaks the head node_name setting.
+        return
+
 
 # flowchart.js flowchart DSL Nodes
 # https://github.com/adrai/flowchart.js#node-syntax
@@ -477,8 +501,8 @@ class TransparentNode(Node):
 
         self.parent = parent
         self.child = child
-        self.connect_params = connect_params
-        self.connection = Connection(child, *connect_params)
+        self.connect_params = connect_params or []
+        self.connection = Connection(child, *self.connect_params)
 
     @property
     def connections(self):
@@ -508,6 +532,22 @@ class TransparentNode(Node):
         self.child = sub_node
         self.connect_params.extend(params)
         self.connection = Connection(sub_node, *self.connect_params)
+
+    # TransparentNode has no name.
+    # It is a virtual node, and it is not a real node in flowchart.js.
+    # So it has no name, as well as no definition.
+    # It just offers a connection parent->child.
+    #
+    # @property
+    # def node_name(self):
+    #     try:
+    #         return self.child.node_name
+    #     except AttributeError:
+    #         return ''
+    #
+    # @node_name.setter
+    # def node_name(self, value):
+    #     return  # do nothing, see NodesGroup.node_name.setter for reason
 
 
 class CondYN(TransparentNode):
@@ -557,6 +597,8 @@ class CondYN(TransparentNode):
 
     def connect(self, sub_node, *params: str) -> None:
         # Historically, CondYN.connect() keeps the previous params.
+        # Actually, TransparentNode.connect() do extend the params too.
+        # So this is a verbose.
         params = list(params)
         params.extend(self.connect_params)
 
