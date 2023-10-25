@@ -9,6 +9,7 @@ license that can be found in the LICENSE file.
 
 import _ast
 import typing
+import warnings
 from typing import Tuple
 
 from pyflowchart.node import *
@@ -717,6 +718,50 @@ class MatchCase(NodesGroup, AstNode):
         self.cond_node.connect_no(virtual_tail)
         self.append_tails(virtual_tail)
 
+    def inlineable(self):
+        """
+        Is this MatchCase inlineable?
+        If so, we can inline it into the MatchCondition.
+        """
+        conn_yes = self.cond_node.connection_yes
+        try:
+            one_line_body = isinstance(conn_yes, Connection) and \
+                            isinstance(conn_yes.next_node, CondYN) and \
+                            isinstance(conn_yes.next_node.sub, Node) and \
+                            not isinstance(conn_yes.next_node.sub, NodesGroup) and \
+                            not isinstance(conn_yes.next_node.sub, ConditionNode) and \
+                            not conn_yes.next_node.sub.connections
+        except Exception:
+            # print(e)
+            one_line_body = False
+        return one_line_body
+
+    def simplify(self) -> None:
+        warnings.warn("MatchCase.simplify() is buggy, use it with caution.")
+
+        if not self.inlineable():
+            return
+
+        try:
+            conn_yes = self.cond_node.connection_yes
+
+            assert isinstance(conn_yes, Connection)
+            assert isinstance(conn_yes.next_node, CondYN)
+            assert isinstance(conn_yes.next_node.sub, Node)
+
+            body = conn_yes.next_node.sub
+
+            simplified = OperationNode(f'{body.node_text} {self.cond_node.node_text}')
+
+            simplified.node_name = self.head.node_name + "inline"
+            self.head = simplified
+            self.tails = [simplified]
+
+        except AttributeError as e:
+            warnings.warn(f"MatchCase.simplify() failed: {e}")
+        except AssertionError as e:
+            warnings.warn(f"MatchCase.simplify() failed: {e}")
+
 
 class Match(NodesGroup, AstNode):
     """
@@ -765,6 +810,7 @@ class Match(NodesGroup, AstNode):
         NodesGroup.__init__(self, transparent_head)
         assert self.head is transparent_head
 
+        self.cases: List[MatchCase] = []
         self.parse_cases(**kwargs)
 
         # remove the transparent_head
@@ -775,6 +821,11 @@ class Match(NodesGroup, AstNode):
         except IndexError or AttributeError:
             self.head = CommonOperation(ast_match)
             self.tails = [self.head]
+
+        # simplify works not well, so I disable it by default.
+        # (it's still possible to call simplify manually, though)
+        # if kwargs.get("simplify", True):
+        #     self.simplify()
 
     def parse_cases(self, **kwargs) -> None:
         """
@@ -788,12 +839,32 @@ class Match(NodesGroup, AstNode):
             match_case_node = MatchCase(match_case, self.subject, **kwargs)
             last_case.connect(match_case_node)
             last_case = match_case_node
+            self.cases.append(match_case_node)
 
         # connect the last case to the end of the match
         try:
             self.tails.extend(last_case.tails)
         except AttributeError:
             self.tails.append(last_case)
+
+        # if kwargs.get("simplify", True):
+        #     self.simplify()
+
+    def simplify(self) -> None:
+        """
+        simplify the inlineable (one-line body) cases:
+            match {subject}:
+                case {pattern} if {guard}:
+                    one_line_body
+        """
+        warnings.warn("Match.simplify() is buggy, use it with caution.")
+
+        try:
+            for case_node in self.cases:
+                if case_node.inlineable():
+                    case_node.simplify()
+        except AttributeError as e:
+            warnings.warn(f"Match.simplify() failed: {e}")
 
 
 # With Python < 3.10, We have no _ast.Match and _ast.match_case,
@@ -878,7 +949,8 @@ def parse(ast_list: List[_ast.AST], **kwargs) -> ParseProcessGraph:
     for ast_object in ast_list:
         # ast_node_class: some special AstNode subclass or CommonOperation by default.
         ast_node_class = __special_stmts.get(type(ast_object), CommonOperation)
-        # special: Match for Python 3.10+
+
+        # special case:  Match for Python 3.10+
         if sys.version_info >= (3, 10) and type(ast_object) == _ast_Match_t:
             ast_node_class = Match
 
