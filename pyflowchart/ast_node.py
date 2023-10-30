@@ -8,11 +8,29 @@ license that can be found in the LICENSE file.
 """
 
 import _ast
-from typing import List, Tuple
-
-import astunparse
+import typing
+import warnings
+from typing import Tuple
 
 from pyflowchart.node import *
+
+# import astunparse
+#
+# `astunparse` is a third-party package, that provides a function `unparse` to translate AST into Python source code.
+# This function is included in Python 3.9 std lib as `ast.unparse`.
+# And there are bugs to continue to use `astunparse` in Python 3.9+.
+# So here: we use `astunparse` in Python 3.8- and `ast.unparse` in Python 3.9+.
+#
+# See also:
+#  - https://github.com/cdfmlr/pyflowchart/issues/28
+#  - https://github.com/simonpercivall/astunparse/issues/56#issuecomment-1438353347
+#  - https://docs.python.org/3/library/ast.html#ast.unparse
+import sys
+
+if sys.version_info < (3, 9):
+    import astunparse
+else:
+    import ast as astunparse
 
 
 # TODO: beautify tail connection direction
@@ -107,6 +125,8 @@ class FunctionDefArgsInput(AstNode, InputOutputNode):
 
     def func_args_str(self):
         # TODO(important): handle defaults, vararg, kwonlyargs, kw_defaults, kwarg
+        assert isinstance(self.ast_object, _ast.FunctionDef) or \
+               hasattr(self.ast_object, "args")
         args = []
         for arg in self.ast_object.args.args:
             args.append(str(arg.arg))
@@ -155,6 +175,8 @@ class FunctionDef(NodesGroup, AstNode):
             - body_head
             - body_tails
         """
+        assert isinstance(self.ast_object, _ast.FunctionDef) or \
+               hasattr(self.ast_object, "body")
         p = parse(self.ast_object.body, **kwargs)
         return p.head, p.tails
 
@@ -181,13 +203,15 @@ class LoopCondition(AstConditionNode):
         """
         one_line_body = False
         try:
-            loop_body = self.connection_yes
+            if not self.connection_yes or not isinstance(self.connection_yes, Connection):
+                return False
+            loop_body = self.connection_yes.next_node
             one_line_body = isinstance(loop_body, CondYN) and \
                             isinstance(loop_body.sub, Node) and \
                             not isinstance(loop_body.sub, NodesGroup) and \
                             not isinstance(loop_body.sub, ConditionNode) and \
                             len(loop_body.sub.connections) == 1 and \
-                            loop_body.sub.connections[0] == self
+                            loop_body.sub.connections[0].next_node == self
         except Exception as e:
             print(e)
         return one_line_body
@@ -211,7 +235,7 @@ class Loop(NodesGroup, AstNode):
 
                 simplify={True | False}: simplify the one_line_body case?
                                            (Default: True)
-                                           See self.simplify
+                                           See `self.simplify`
         """
         AstNode.__init__(self, ast_loop, **kwargs)
 
@@ -228,8 +252,12 @@ class Loop(NodesGroup, AstNode):
 
     def parse_loop_body(self, **kwargs) -> None:
         """
-        Parse and Connect loop-body (a node graph) to self.cond_node (LoopCondition), extend self.tails with tails got.
+        Parse and Connect loop-body (a node graph) to self.cond_node (LoopCondition), extend `self.tails` with tails got.
         """
+        assert isinstance(self.ast_object, _ast.For) or \
+               isinstance(self.ast_object, _ast.While) or \
+               hasattr(self.ast_object, "body")
+
         progress = parse(self.ast_object.body, **kwargs)
 
         if progress.head is not None:
@@ -245,15 +273,16 @@ class Loop(NodesGroup, AstNode):
             noop = SubroutineNode("no-op")
             noop.set_connect_direction("left")
             noop.connect(self.cond_node)
-            self.cond_node.connection_yes(noop)
+            self.cond_node.connect_yes(noop)
 
     def _virtual_no_tail(self) -> None:
-        virtual_no = CondYN(self, CondYN.NO)
+        # virtual_no = NopNode(parent=self.cond_node)
+        # virtual_no = CondYN(self, CondYN.NO)
+        virtual_no = None
+        self.cond_node.connect_no(virtual_no)
 
-        self.cond_node.connection_no = virtual_no
-        self.cond_node.connections.append(virtual_no)
-
-        self.append_tails(virtual_no)
+        self.append_tails(self.cond_node.connection_no.next_node)
+        pass
 
     # def connect(self, sub_node) -> None:
     #     self.cond_node.connect_no(sub_node)
@@ -273,7 +302,8 @@ class Loop(NodesGroup, AstNode):
         try:
             if self.cond_node.is_one_line_body():  # simplify
                 cond = self.cond_node
-                body = self.cond_node.connection_yes.sub
+                assert isinstance(self.cond_node.connection_yes.next_node, CondYN)
+                body = self.cond_node.connection_yes.next_node.sub
 
                 simplified = OperationNode(f'{body.node_text} while {cond.node_text.lstrip("for").lstrip("while")}')
 
@@ -303,12 +333,13 @@ class IfCondition(AstConditionNode):
         """
         one_line_body = False
         try:
-            yes = self.connection_yes
-            one_line_body = isinstance(yes, CondYN) and \
-                            isinstance(yes.sub, Node) and \
-                            not isinstance(yes.sub, NodesGroup) and \
-                            not isinstance(yes.sub, ConditionNode) and \
-                            not yes.sub.connections
+            conn_yes = self.connection_yes
+            one_line_body = isinstance(conn_yes, Connection) and \
+                            isinstance(conn_yes.next_node, CondYN) and \
+                            isinstance(conn_yes.next_node.sub, Node) and \
+                            not isinstance(conn_yes.next_node.sub, NodesGroup) and \
+                            not isinstance(conn_yes.next_node.sub, ConditionNode) and \
+                            not conn_yes.next_node.sub.connections
         except Exception as e:
             print(e)
         return one_line_body
@@ -325,9 +356,10 @@ class IfCondition(AstConditionNode):
         """
         no_else = False
         try:
-            no = self.connection_no
-            no_else = isinstance(no, CondYN) and \
-                      not no.sub
+            conn2no = self.connection_no
+            no_else = isinstance(conn2no, Connection) and \
+                      isinstance(conn2no.next_node, CondYN) and \
+                      not conn2no.next_node.sub
         except Exception as e:
             print(e)
         return no_else
@@ -335,7 +367,7 @@ class IfCondition(AstConditionNode):
 
 class If(NodesGroup, AstNode):
     """
-    If is a AstNode for _ast.If (the if sentences in python source code)
+    If is a AstNode for _ast.If (the `if` sentences in python source code)
 
     This class is a NodesGroup that connects to IfCondition & if-body & else-body.
     """
@@ -351,7 +383,7 @@ class If(NodesGroup, AstNode):
 
                 simplify={True | False}: simplify the one_line_body case?
                                            (Default: True)
-                                           See self.simplify
+                                           See `self.simplify`
         """
         AstNode.__init__(self, ast_if, **kwargs)
 
@@ -365,12 +397,15 @@ class If(NodesGroup, AstNode):
         if kwargs.get("simplify", True):
             self.simplify()
         if kwargs.get("conds_align", False) and self.cond_node.is_no_else():
-            self.cond_node.connection_yes.set_connect_direction("right")
+            self.cond_node.connection_yes.set_param("right")
 
     def parse_if_body(self, **kwargs) -> None:
         """
         Parse and Connect if-body (a node graph) to self.cond_node (IfCondition).
         """
+        assert isinstance(self.ast_object, _ast.If) or \
+               hasattr(self.ast_object, "body")
+
         progress = parse(self.ast_object.body, **kwargs)
 
         if progress.head is not None:
@@ -380,27 +415,32 @@ class If(NodesGroup, AstNode):
             #         t.set_connect_direction("right")
             self.extend_tails(progress.tails)
         else:  # connect virtual connection_yes
-            virtual_yes = CondYN(self, CondYN.YES)
-            self.cond_node.connection_yes = virtual_yes
-            self.cond_node.connections.append(virtual_yes)
+            # virtual_yes = NopNode(parent=self.cond_node)
+            # virtual_yes = CondYN(self, CondYN.YES)
+            virtual_yes = None
+            self.cond_node.connect_yes(virtual_yes)
 
-            self.append_tails(virtual_yes)
+            self.append_tails(self.cond_node.connection_yes.next_node)
 
     def parse_else_body(self, **kwargs) -> None:
         """
         Parse and Connect else-body (a node graph) to self.cond_node (IfCondition).
         """
+        assert isinstance(self.ast_object, _ast.If) or \
+               hasattr(self.ast_object, "orelse")
+
         progress = parse(self.ast_object.orelse, **kwargs)
 
         if progress.head is not None:
             self.cond_node.connect_no(progress.head)
             self.extend_tails(progress.tails)
         else:  # connect virtual connection_no
-            virtual_no = CondYN(self, CondYN.NO)
-            self.cond_node.connection_no = virtual_no
-            self.cond_node.connections.append(virtual_no)
+            # virtual_no = NopNode(parent=self.cond_node)
+            # virtual_no = CondYN(self, CondYN.NO)
+            virtual_no = None
+            self.cond_node.connect_no(virtual_no)
 
-            self.append_tails(virtual_no)
+            self.append_tails(self.cond_node.connection_no.next_node)
 
     def simplify(self) -> None:
         """simplify the one-line body case:
@@ -418,7 +458,11 @@ class If(NodesGroup, AstNode):
         try:
             if self.cond_node.is_no_else() and self.cond_node.is_one_line_body():  # simplify
                 cond = self.cond_node
-                body = self.cond_node.connection_yes.sub
+                if not cond.connection_yes:
+                    return
+
+                assert isinstance(self.cond_node.connection_yes.next_node, CondYN)
+                body = self.cond_node.connection_yes.next_node.sub
 
                 simplified = OperationNode(f'{body.node_text} if {cond.node_text.lstrip("if")}')
 
@@ -532,7 +576,7 @@ class Return(NodesGroup, AstNode):
     """
     ReturnEnd is a AstNode for _ast.Return (return sentence in python source code)
 
-    This class is a invisible virtual Node (i.e. NodesGroup) that connects to ReturnOutput & ReturnEnd.
+    This class is an invisible virtual Node (i.e. NodesGroup) that connects to ReturnOutput & ReturnEnd.
     """
 
     def __init__(self, ast_return: _ast.Return, **kwargs):
@@ -558,7 +602,7 @@ class Return(NodesGroup, AstNode):
             self.output_node.connect(self.end_node)
             self.head = self.output_node
 
-        self.connections.append(self.head)
+        self.connections.append(Connection(self.head))
 
         NodesGroup.__init__(self, self.head, [self.end_node])
 
@@ -581,6 +625,265 @@ class Return(NodesGroup, AstNode):
         pass
 
 
+#############
+#   Match   #
+#############
+
+# _ast_Match_t is a type alias to _ast.Match in Python 3.10+.
+# for old Python versions, it can be anything (_ast.AST).
+#
+# This is a workaround for the problem that
+# an _ast.NON_EXIST as a type hint will prevent the whole program from running:
+#     AttributeError: module '_ast' has no attribute 'Match'
+_ast_Match_t = _ast.AST
+if sys.version_info >= (3, 10):
+    _ast_Match_t = _ast.Match
+
+# similar to _ast_Match_t
+_ast_match_case_t = _ast.AST
+if sys.version_info >= (3, 10):
+    _ast_match_case_t = _ast.match_case
+
+
+class MatchCaseCondition(ConditionNode):
+    """
+    MatchCaseConditionNode is ConditionNode special for the condition of a case in match-case:
+
+        match {subject}:
+            case {pattern} if {guard}:
+                ...
+    """
+
+    def __init__(self, ast_match_case: _ast_match_case_t, subject: _ast.AST, **kwargs):
+        """
+        Args:
+            ast_match_case: instance of _ast.match_case
+            **kwargs: None
+        """
+        ConditionNode.__init__(self, cond=self.cond_expr(ast_match_case, subject))
+
+    @staticmethod
+    def cond_expr(ast_match_case: _ast_match_case_t, subject: _ast.AST) -> str:
+        """
+        cond_expr returns the condition expression of match-case sentence.
+
+            "if {subject} match case {pattern} [if {guard}]"
+        """
+        subject = astunparse.unparse(subject).strip()
+        pattern = astunparse.unparse(ast_match_case.pattern).strip()
+        guard = astunparse.unparse(ast_match_case.guard).strip() if ast_match_case.guard else None
+
+        s = f"if {subject} match case {pattern}"
+        if guard:
+            s += f" if {guard}"
+
+        return s
+
+
+class MatchCase(NodesGroup, AstNode):
+    """
+    MatchCase is a NodesGroup that connects to MatchCaseConditionNode & case-body.
+    It is from a case in match-case:
+        match {subject}:
+            case {pattern} if {guard}:
+                {body}
+    We parse it to an NodesGroup, that looks like an If without Else:
+        If (self, NodesGroup)
+            -> IfCondition('if {subject} match case {pattern} [if {guard}]') ->
+                -> yes -> [body]
+                -> no -> aTransparentNode
+    """
+
+    def __init__(self, ast_match_case: _ast_match_case_t, subject: _ast.AST, **kwargs):
+        AstNode.__init__(self, ast_match_case, **kwargs)
+
+        self.cond_node = MatchCaseCondition(ast_match_case, subject)
+
+        NodesGroup.__init__(self, self.cond_node)
+
+        self.parse_body(**kwargs)
+
+    def parse_body(self, **kwargs) -> None:
+        assert isinstance(self.ast_object, _ast.match_case) or \
+               hasattr(self.ast_object, "body")
+
+        progress = parse(self.ast_object.body)
+
+        if progress.head is not None:
+            self.cond_node.connect_yes(progress.head)
+            self.extend_tails(progress.tails)
+
+        # always connect a transparent node as the no-path
+        virtual_tail = TransparentNode(self.cond_node, connect_params=["no"])
+        self.cond_node.connect_no(virtual_tail)
+        self.append_tails(virtual_tail)
+
+    def inlineable(self):
+        """
+        Is this MatchCase inlineable?
+        If so, we can inline it into the MatchCondition.
+        """
+        conn_yes = self.cond_node.connection_yes
+        try:
+            one_line_body = isinstance(conn_yes, Connection) and \
+                            isinstance(conn_yes.next_node, CondYN) and \
+                            isinstance(conn_yes.next_node.sub, Node) and \
+                            not isinstance(conn_yes.next_node.sub, NodesGroup) and \
+                            not isinstance(conn_yes.next_node.sub, ConditionNode) and \
+                            not conn_yes.next_node.sub.connections
+        except Exception:
+            # print(e)
+            one_line_body = False
+        return one_line_body
+
+    def simplify(self) -> None:
+        warnings.warn("MatchCase.simplify() is buggy, use it with caution.")
+
+        if not self.inlineable():
+            return
+
+        try:
+            conn_yes = self.cond_node.connection_yes
+
+            assert isinstance(conn_yes, Connection)
+            assert isinstance(conn_yes.next_node, CondYN)
+            assert isinstance(conn_yes.next_node.sub, Node)
+
+            body = conn_yes.next_node.sub
+
+            simplified = OperationNode(f'{body.node_text} {self.cond_node.node_text}')
+
+            simplified.node_name = self.head.node_name + "inline"
+            self.head = simplified
+            self.tails = [simplified]
+
+        except AttributeError as e:
+            warnings.warn(f"MatchCase.simplify() failed: {e}")
+        except AssertionError as e:
+            warnings.warn(f"MatchCase.simplify() failed: {e}")
+
+
+class Match(NodesGroup, AstNode):
+    """
+    Match is a AstNode for _ast.Match (the `match-case` sentences in python source code)
+
+    This class is a NodesGroup that connects to MatchCondition & its cases.
+    """
+
+    def __init__(self, ast_match: _ast_Match_t, **kwargs):
+        """
+        Construct Match object will make following Node chain:
+            Match -> MatchCondition -> (case1) -> case1-path
+                                    -> (case2) -> case2-path
+                                    ...
+
+        A match-case sentence contains:
+
+            match {subject}:
+                case {pattern} if {guard}:
+                    {body}
+                case ...:
+                    ...
+
+        Args:
+            **kwargs:
+
+                simplify={True | False}: simplify the one_line_body case?
+                                           (Default: True)
+                                           See `self.simplify`
+        """
+        AstNode.__init__(self, ast_match, **kwargs)
+
+        # A Cond for match_case should be represented as "if {subject} match case {pattern}"
+        self.subject = ast_match.subject
+
+        # self.head = TransparentNode(self)
+        # fuck the multi inheritance,,, my brain is buffer overflowing
+        # god bless the jetbrains helped me figure out this overstep
+        # well, never mind. I believe that NodesGroup.__init__()
+        # is the right way to set it up as well as self.head properly.
+
+        # Each case is a condition node.
+        # Since we have not parsed any case body, (nor I want to peek one),
+        # here we use a transparent node as the head of the NodesGroup.
+        transparent_head = TransparentNode(self)
+        NodesGroup.__init__(self, transparent_head)
+        assert self.head is transparent_head
+
+        self.cases: List[MatchCase] = []
+        self.parse_cases(**kwargs)
+
+        # remove the transparent_head
+        try:
+            debug(f"Match.__init__() replace head: self.head before: {type(self.head)}: {self.head.__dict__}")
+            self.head = self.head.connections[0].next_node
+            debug(f"Match.__init__() replace head self.head after: {type(self.head)}: {self.head.__dict__}")
+        except IndexError or AttributeError:
+            self.head = CommonOperation(ast_match)
+            self.tails = [self.head]
+
+        # simplify works not well, so I disable it by default.
+        # (it's still possible to call simplify manually, though)
+        # if kwargs.get("simplify", True):
+        #     self.simplify()
+
+    def parse_cases(self, **kwargs) -> None:
+        """
+        Parse and Connect cases of the match
+        """
+        assert isinstance(self.ast_object, _ast.Match) or \
+               hasattr(self.ast_object, "cases")
+
+        last_case = self.head  # at first, it's a transparent node
+        for match_case in self.ast_object.cases:
+            match_case_node = MatchCase(match_case, self.subject, **kwargs)
+            last_case.connect(match_case_node)
+            last_case = match_case_node
+            self.cases.append(match_case_node)
+
+        # connect the last case to the end of the match
+        try:
+            self.tails.extend(last_case.tails)
+        except AttributeError:
+            self.tails.append(last_case)
+
+        # if kwargs.get("simplify", True):
+        #     self.simplify()
+
+    def simplify(self) -> None:
+        """
+        simplify the inlineable (one-line body) cases:
+            match {subject}:
+                case {pattern} if {guard}:
+                    one_line_body
+        """
+        warnings.warn("Match.simplify() is buggy, use it with caution.")
+
+        try:
+            for case_node in self.cases:
+                if case_node.inlineable():
+                    case_node.simplify()
+        except AttributeError as e:
+            warnings.warn(f"Match.simplify() failed: {e}")
+
+
+# With Python < 3.10, We have no _ast.Match and _ast.match_case,
+# unable to parse match-case sentence. Just trait it as a common sentence.
+# That is, unparse the whole match-case sentence, put the result into a OperationNode.
+#
+# DUCK, with Python 3.7, it is not possible for ast to parse match-case sentence:
+#     File "/Users/z/Projects/pyflowchart/pyflowchart/flowchart.py", line 94, in from_code
+#       code_ast = ast.parse(code)
+#     File "/Users/z/.pyenv/versions/3.7.17/lib/python3.7/ast.py", line 35, in parse
+#       return compile(source, filename, mode, PyCF_ONLY_AST)
+#     File "<unknown>", line 3
+#       match b:
+#         ^
+#     SyntaxError: invalid syntax
+# So, this is in vain.
+if sys.version_info < (3, 10):
+    Match = CommonOperation
+
 # Sentence: common | func | cond | loop | ctrl
 # - func: def
 # - cond: if
@@ -596,6 +899,7 @@ __func_stmts = {
 
 __cond_stmts = {
     _ast.If: If,
+    # _ast_Match_t: Match,  # need to check Python version, handle it later manually.
 }
 
 __loop_stmts = {
@@ -624,7 +928,7 @@ class ParseProcessGraph(NodesGroup):
 
 def parse(ast_list: List[_ast.AST], **kwargs) -> ParseProcessGraph:
     """
-    parse a ast_list (from _ast.Module/FunctionDef/For/If/etc.body)
+    parse an ast_list (from _ast.Module/FunctionDef/For/If/etc.body)
 
     Args:
         ast_list: a list of _ast.AST object
@@ -646,12 +950,15 @@ def parse(ast_list: List[_ast.AST], **kwargs) -> ParseProcessGraph:
         # ast_node_class: some special AstNode subclass or CommonOperation by default.
         ast_node_class = __special_stmts.get(type(ast_object), CommonOperation)
 
+        # special case:  Match for Python 3.10+
+        if sys.version_info >= (3, 10) and type(ast_object) == _ast_Match_t:
+            ast_node_class = Match
+
         # special case: special stmt as a expr value. e.g. function call
         if type(ast_object) == _ast.Expr:
-            try:
+            if hasattr(ast_object, "value"):
                 ast_node_class = __special_stmts.get(type(ast_object.value), CommonOperation)
-            except AttributeError:
-                # ast_object has no value attribute
+            else:  # ast_object has no value attribute
                 ast_node_class = CommonOperation
 
         assert issubclass(ast_node_class, AstNode)
