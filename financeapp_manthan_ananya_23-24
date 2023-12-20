@@ -1,0 +1,333 @@
+import os
+
+def welcome_message():
+    print("******************************************")
+    print("*        WELCOME TO YOUR FINANCE APP      *")
+    print("******************************************")
+
+def add_transaction():
+    while True:
+        ename = str(input("Enter your name:"))
+        if not ename.isalpha():
+            print("Name should be in words only")
+            continue
+        else:
+            break
+
+    while True:
+        try:
+            account_number = int(input("Enter your account number:"))
+        except ValueError:
+            print("Invalid account number")
+            continue
+        if account_number < 0:
+            print("Account number can never be negative")
+            continue
+        else:
+            break
+
+    balance = 0  # Initialize balance to zero
+
+    while True:
+        check_balance = input("Do you want to check your balance? (1.Yes / 2.No): ")
+        if check_balance == '1':
+            print(f"Your current balance is: {balance}")
+            break
+        elif check_balance == '2':
+            break
+        else:
+            print("Invalid choice. Please enter 1 or 2.")
+
+    while True:
+        try:
+            deposit_amount = float(input("Enter amount to be deposited:"))
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+            continue
+        if deposit_amount < 0:
+            print("Amount to be deposited cannot be negative")
+            continue
+        else:
+            balance += deposit_amount  # Update the balance
+            break
+
+    while True:
+        area = str(input("Enter your resident area:"))
+        if not area.isalpha():
+            print("Area should be a string of characters")
+            continue
+        else:
+            break
+
+    with open("finance_data.txt", "a") as f:
+        f.write(f"{ename}\t{account_number}\t+{deposit_amount}\t{balance}\t{area}\n")
+    print("Transaction completed successfully.")
+
+def withdraw(balance):
+    while True:
+        try:
+            withdraw_amount = float(input("Enter amount to be withdrawn in USD: "))
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+            continue
+
+        if withdraw_amount < 0:
+            print("Withdrawal amount cannot be negative.")
+            continue
+        elif withdraw_amount > balance:
+            print("Insufficient funds. Cannot withdraw more than your balance.")
+            continue
+        else:
+            # Format withdrawal amount to two decimal places
+            withdraw_amount = round(withdraw_amount, 2)
+            balance -= withdraw_amount  # Update the balance
+            break
+
+    return balance
+
+# Example usage
+    pl=int(input("Enter Initial Amount"))
+    initial_balance =pl
+    new_balance = withdraw(initial_balance)
+    print(f"New Balance: {new_balance}")
+
+def get_user_input():
+    transactions = []
+    while True:
+        date = input("Enter date (or 'done' to finish): ")
+        if date.lower() == 'done':
+            break
+
+        transaction_type = input("Enter transaction type (income/expense): ")
+        description = input("Enter description: ")
+        amount = float(input("Enter amount: "))
+
+        transaction = {'date': date, 'type': transaction_type, 'description': description, 'amount': amount}
+        transactions.append(transaction)
+
+    return transactions
+def view_history():
+    print("\nTRANSACTION HISTORY:")
+    with open("finance_data.txt", "r") as f:
+        for line in f:
+            print(line.strip())
+
+def set_budget():
+    while True:
+        try:
+            budget_amount = float(input("Enter your monthly budget:"))
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+            continue
+        if budget_amount < 0:
+            print("Budget amount cannot be negative")
+            continue
+        else:
+            break
+
+    with open("finance_data.txt", "a") as f:
+        f.write(f"BUDGET\t{budget_amount}\n")
+    print("Budget set successfully.")
+
+def track_expenses():
+    print("\nEXPENSE TRACKING:")
+    expense_category = str(input("Enter expense category (e.g., Groceries, Entertainment, Utilities):"))
+
+    while True:
+        try:
+            expense_amount = float(input(f"Enter the amount spent on {expense_category}:"))
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+            continue
+        if expense_amount < 0:
+            print("Expense amount cannot be negative")
+            continue
+        else:
+            break
+
+    with open("finance_data.txt", "a") as f:
+        f.write(f"EXPENSE\t-{expense_amount}\t{expense_category}\n")
+    print("Expense recorded successfully.")
+
+def manage_investments():
+    print("\nINVESTMENT PORTFOLIO:")
+    print("1. Add Investment")
+    print("2. View Investments")
+    print("3. View Investment Performance")
+    print("4. Quit")
+    investment_choice = input("Enter your choice:")
+    
+    if investment_choice == '1':
+        investment_name = str(input("Enter investment name:"))
+        investment_category = str(input("Enter investment category:"))
+        investment_amount = float(input("Enter investment amount:"))
+
+        with open("finance_data.txt", "a") as f:
+            f.write(f"INVESTMENT\t{investment_name}\t{investment_category}\t+{investment_amount}\n")
+        print("Investment added successfully.")
+    elif investment_choice == '2':
+        print("INVESTMENT VIEW:")
+        with open("finance_data.txt", "r") as f:
+            for line in f:
+                if "INVESTMENT" in line:
+                    print(line.strip())
+    elif investment_choice == '3':
+        print("INVESTMENT PERFORMANCE:")
+        # Placeholder for investment performance metrics
+    elif investment_choice == '4':
+        return
+    else:
+        print("Invalid input")
+
+    manage_investments()
+
+def adjust_budget():
+    print("\nADJUST MONTHLY BUDGET:")
+    new_budget_amount = float(input("Enter the new monthly budget amount:"))
+
+    with open("finance_data.txt", "a") as f:
+        f.write(f"ADJUST_BUDGET\t{new_budget_amount}\n")
+    print("Monthly budget adjusted successfully.")
+
+def manage_loans():
+    print("\nLOAN MANAGEMENT:")
+    print("1. Apply for Loan")
+    print("2. View Outstanding Loans")
+    print("3. Quit")
+    loan_choice = input("Enter your choice:")
+
+    if loan_choice == '1':
+        loan_amount = float(input("Enter loan amount:"))
+        loan_term = int(input("Enter loan term (months):"))
+
+        with open("finance_data.txt", "a") as f:
+            f.write(f"LOAN\t-{loan_amount}\t{loan_term}\n")
+        print("Loan applied successfully.")
+    elif loan_choice == '2':
+        print("OUTSTANDING LOANS:")
+        with open("finance_data.txt", "r") as f:
+            for line in f:
+                if "LOAN" in line:
+                    print(line.strip())
+    elif loan_choice == '3':
+        return
+    else:
+        print("Invalid input")
+
+    manage_loans()
+
+def set_savings_goal():
+    while True:
+        try:
+            savings_goal_amount = float(input("Enter your savings goal amount:"))
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+            continue
+        if savings_goal_amount < 0:
+            print("Savings goal amount cannot be negative")
+            continue
+        else:
+            break
+
+    with open("finance_data.txt", "a") as f:
+        f.write(f"SAVINGS_GOAL\t{savings_goal_amount}\n")
+    print("Savings goal set successfully.")
+
+def generate_finance_report(transactions):
+    total_income = 0
+    total_expenses = 0
+
+    print("Finance Report\n")
+    print("{:<15} {:<10} {:<20} {:<10}".format("Date", "Type", "Description", "Amount"))
+    print("-" * 55)
+
+    for transaction in transactions:
+        date = transaction['date']
+        transaction_type = transaction['type']
+        description = transaction['description']
+        amount = transaction['amount']
+
+        print("{:<15} {:<10} {:<20} ₹{:<10.2f}".format(date, transaction_type, description, amount))
+
+        if transaction_type == 'income':
+            total_income += amount
+        elif transaction_type == 'expense':
+            total_expenses += amount
+
+    net_income = total_income - total_expenses
+
+    print("\nTotal Income: ₹{:.2f}".format(total_income))
+    print("Total Expenses: ₹{:.2f}".format(total_expenses))
+    print("Net Income: ₹{:.2f}".format(net_income))
+
+
+
+def main():
+    welcome_message()
+
+    while True:
+        print("\nMAIN MENU:")
+        print("1. Add Transaction Details")
+        print("2. Withdraw Money")
+        print("3. Transfer Money")
+        print("4. View Transaction History")
+        print("5. Set Monthly Budget")
+        print("6. Track Expenses")
+        print("7. Manage Investments")
+        print("8. Adjust Monthly Budget")
+        print("9. Manage Loans")
+        print("10. Set Savings Goal")
+        print("11. Generate Financial Report")
+        print("12. Quit")
+        choice = input("Enter your choice:")
+
+        if choice == '1':
+            add_transaction()
+        elif choice == '2':
+            # Withdraw money only if the user has added a transaction
+            if os.path.exists("finance_data.txt") and os.path.getsize("finance_data.txt") > 0:
+                new_balance = withdraw(initial_balance)
+                with open("finance_data.txt", "a") as f:
+                    f.write(f"WITHDRAWAL\t-{withdrawn_amount}\t{balance}\n")
+                print("Transaction completed successfully.")
+            else:
+                print("No transactions found. Please add a transaction first.")
+        elif choice == '3':
+            # Transfer money only if the user has added a transaction
+            if os.path.exists("finance_data.txt") and os.path.getsize("finance_data.txt") > 0:
+                balance, transferred_amount, receiver_account = transfer(balance)
+                with open("finance_data.txt", "a") as f:
+                    f.write(f"TRANSFER\t-{transferred_amount}\t{balance}\tTO\t{receiver_account}\n")
+                print("Transaction completed successfully.")
+            else:
+                print("No transactions found. Please add a transaction first.")
+        elif choice == '4':
+            view_history()
+        elif choice == '5':
+            set_budget()
+        elif choice == '6':
+            track_expenses()
+        elif choice == '7':
+            manage_investments()
+        elif choice == '8':
+            adjust_budget()
+        elif choice == '9':
+            manage_loans()
+        elif choice == '10':
+            set_savings_goal()
+        elif choice == '11':
+            transactions = get_user_input()
+
+    # Check if there are transactions to generate a report
+            if transactions:
+                generate_finance_report(transactions)
+            else:
+                print("No transactions to generate a report.")
+
+        elif choice == '12':
+            exit()
+        else:
+            print("Invalid input")
+
+if _name_ == "_main_":
+    main()
