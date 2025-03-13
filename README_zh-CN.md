@@ -1,13 +1,14 @@
 # PyFlowchart
 
-[English](README.md) | 机翻中文
+[English](README.md) | 中文
 
 PyFlowchart是一个软件包，用于：
 
 - 用 Python 语言编写流程图；
 - 将 Python 源代码翻译成流程图。
 
-PyFlowchart 用 [flowchart.js](https://github.com/adrai/flowchart.js) DSL 来绘制流程图，这是一种广泛使用的流程图文本表示。通过[flowchart.js.org](http://flowchart.js.org)、[francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart)或一些markdown编辑器，很容易将这些流程图文本转换成图片。
+PyFlowchart 用 [flowchart.js](https://github.com/adrai/flowchart.js) 使用一种广泛使用的流程图文本DSL来绘制流程图。通过[flowchart.js.org](http://flowchart.js.org)、[francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart)或一些markdown编辑器，很容易将这些流程图文本转换成图片。
+另外，我们支持将输出的流程图转换成可交互的HTML图片。
 
 
 ## 安装 PyFlowchart
@@ -18,7 +19,7 @@ $ pip install pyflowchart
 
 ## 快速开始
 
-要将 `example.py` 中的 Python 代码流程图化，运行:
+要**将 `example.py` 中的 Python 代码流程图化**，运行:
 
 ```sh
 $ python -m pyflowchart example.py
@@ -28,7 +29,16 @@ $ python -m pyflowchart example.py
 
 PyFlowchart 将输出生成的 flowchart.js DSL。进入 http://flowchart.js.org ，或使用[Typora](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts) 等编辑器，可以将输出的文本渲染成流程图。
 
-如果要指定一个函数（或一个类中的方法）转化为流程图，请运行：
+**输出一个包含流程图的HTML文件**：
+
+```sh
+$ python -m pyflowchart example.py -o example.html
+$ # open example.html
+```
+
+你可以使用浏览器中打开example.html来查看输出的流程图。
+
+如果要**指定一个函数（或一个类中的方法）转化为流程图**，请运行：
 
 ```sh
 $ python -m pyflowchart example.py -f function_name
@@ -36,9 +46,9 @@ $ python -m pyflowchart example.py -f function_name
 $ python -m pyflowchart example.py -f ClassName.method_name
 ```
 
-🎉 现在，你已经准备好享受流程图的制作了。
+🎉 **现在，你已经准备好享受流程图的制作了。**
 
-继续阅读本文件以了解更多的用法。
+你可以继续阅读本文件以了解更多的用法。
 
 ## 用 Python 编写流程图
 
@@ -46,17 +56,17 @@ PyFlowchart 允许你用 Python 表达一个流程图，我们会帮你把它翻
 
 PyFlowchart支持[flowchart.js](https://github.com/adrai/flowchart.js#node-types)节点类型。
 
-- StartNode
-- 操作节点
-- 条件节点
-- 输入输出节点
-- SubroutineNode
-- 结束节点
+- StartNode 开始节点
+- OperationNode 操作节点
+- ConditionNode 条件节点
+- InputOutputNode 输入输出节点
+- SubroutineNode 子函数节点
+- EndNode 结束节点
 
 节点可以通过 `connect()` 方法连接（ConditionNode为 `connect_{yes|no}`）。`connect()` 还可以接收第二个可选的参数，用于指定连线的方向。
 
 
-用你的启动节点获得一个流程图对象（`Flowchart`），并调用其 `flowchart()` 方法来生成 flowchart.js 流程图 DSL：
+你可以从开始节点获得一个流程图对象（`Flowchart`），并调用其 `flowchart()` 方法来生成 flowchart.js 流程图 DSL：
 
 ```python
 from pyflowchart import *
@@ -103,11 +113,15 @@ sub4(right)->op1
 
 ![screenshot on flowchart.js page](docs/imgs/flowchart-js-org.png)
 
-P.S. 许多 Markdown 编辑器（例如 Typora）也支持这种流程图语法（参考：[Typora doc about flowchart](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts))。如果你喜欢 CLI，可以参考 [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart)。
+(v0.3.0) 你同时可以使用 pyflowchart.output_html 来生成一个类似于上图的界面:
+
+output_html('output.html', 'a_pyflow_test', fc.flowchart())
+
+P.S. 许多 Markdown 编辑器（例如 Typora）也支持这种流程图语法(参考：[Typora doc about flowchart](https://support.typora.io/Draw-Diagrams-With-Markdown/#flowcharts))。如果你喜欢 CLI，可以参考 [francoislaberge/diagrams](https://github.com/francoislaberge/diagrams/#flowchart)。
 
 ### 为节点设置参数
 
-从 v0.2.0 开始，我们支持 `Node.set_param(key, value)` 方法来生成这样的流程图：
+从 v0.2.0 开始，我们支持 `Node.set_param(key, value)` 方法来生成如下的流程图：
 
 ```
 element(param1=value1,param2=value2)=>start: Start
@@ -124,7 +138,8 @@ cond.no_align_next()
 cond = ConditionNode("a cond node", align_next=False)
 ```
 
-这通常与 connect_direction 的定制一起工作：
+这通常与 connect_direction 一起使用：
+(原文：This usually works with a connect_direction customization:)
 
 ```python
 cond.connect_yes(op, "right")
@@ -155,7 +170,7 @@ def foo(a, b):
     return a + b
 ```
 
-你可以在 CLI 中运行 PyFlowchart 来生成流程图代码：
+你可以在终端中运行以下代码生成流程图：
 
 ```sh
 $ python -m pyflowchart simple.py
@@ -186,18 +201,26 @@ $ python -m pyflowchart simple.py
 Flowchart.from_code(code, field="", inner=True, simplify=True, conds_align=False)
 ```
 
-PyFlowchart CLI 是这个函数的 1:1 接口：
+`code`: The Python code to be converted into a flowchart.
+`field`: The name of a field in the code to be converted into a flowchart. If this parameter is not specified, the entire code will be converted.
+`inner`: If True, the body of the field will be parsed as a nested flowchart. If False, the body of the field will be parsed as a single node.
+`simplify`: If True, simple If and Loop statements will be simplified. For example, an If statement with a single expression will be converted into a single node.
+`conds_align`: If True, consecutive If statements will be aligned in the flowchart.
+
+PyFlowchart CLI 是类似于这个函数的接口：
 
 ```sh
-python -m pyflowchart [-f FIELD] [-i] [--no-simplify] [--conds-align] code_file
+python -m pyflowchart [-f FIELD] [-i] [--no-simplify] [--conds-align] [-o OUTPUT] code_file
 ```
 
-让我们谈谈这里的三个可选参数：
+- `-f FIELD`: The name of the field to be converted into a flowchart.
+- `-i`:  If specified, the body of the field will be parsed as a nested flowchart.
+- `--no-simplify`:  If specified, the If and Loop statements will not be simplified.
+- `--conds-align`: If specified, consecutive If statements will be aligned in the flowchart.
+- `-o OUTPUT`: If specified, output the flowchart to specific file with a format indicating by the extension name. (only support `*.html` for now)
 
-- `field`: str: 指定一个要生成流程图的代码字段
-- `inner`: bool:  `True` 用于解析字段的主体；而 `False` 用于将主体解析为单一对象。
-- `simplify`: bool: 用于 If 和 Loop 语句：是否简化单行体。
-- `conds_align`: bool: 改善从 python 代码转换的*连续 If 语句*的流程图视觉表现。(Beta)
+⚠️ `-o` is not a part of `Flowchart.from_code`. It's `from pyflowchar import output_html`.
+
 
 ### field
 
@@ -295,7 +318,7 @@ print(flowchart.flowchart())
 
 ### conds-align (Beta)
 
-利用 v0.2.0  的新功能，改进从 Python 代码转换的 *连续的 If 语句* 的流程图。
+The `conds-align` parameter controls whether consecutive If statements are aligned in the flowchart. When `conds-align=True`, 改进从 Python 代码转换的 *连续的 If 语句* 的流程图。
 
 ```python
 # example-conds-align.py
@@ -310,11 +333,34 @@ op_end
 
 ![conds-align-result](docs/imgs/conds-align.png)
 
+**Note:** 还在测试，有时会寄。
+
+### output html and images
+
+You can also directly ouput the generated flowchart.js DSL into an html by adding the parameter ```-o output.html``` where you specify an output filename ending in `.html` or `.htm`.
+
+![output-html](docs/imgs/output-html.png)
+
+Opening the `output.html` in your browser will let you visualize the diagrams. You can tweak the code and click run to update the diagram. There are also links to download the current visuals as a  `.svg` or `.png` image.
+
+⚠️ The output file specified will overwrite any file that already has that name.
+
+🐍 To use this feature via Python instead of CLI, call `output_html(output_name: str, field_name: str, flowchart: str) -> None`:
+
+```py
+>>> import pyflowchart
+>>> help(pyflowchart.output_html)
+```
+
 ## 美化生成的流程图
 
 有时，生成的流程图是很糟糕的。在这种情况下，我们鼓励你自己修改生成的流程图代码，或者考虑修改你要生成流程图的 python 源代码，让它表达更加清晰，如果它非常复杂（例如去掉异常处理——如果它们只是工程上的保障，而不是算法流程的一部分）
 
 （流程图应该被用来表示算法，而不是具体实现。算法是给人看的，实现是给机器看的。所以算法和具体实现的一个重要区别是，我们的代码实现中，时常需要加入一些工程上的保障，例如判断输入值是否合法，不过这对于算法描述并不重要——对人脑来说 `"1" + "1" == "2"` 问题也不大，能看懂就行。我推荐在生成流程图之前，把这些在实践上举足轻重、但在算法上细枝末节代码去掉。）
+
+An example: If you don't like the flowchart flow direction you can tweak a condition by modifying with with directions such as:
+
+![beautify-flowchart-example](docs/imgs/beautify-example.png)
 
 ## TODOs
 
@@ -330,7 +376,7 @@ $ pyflowchart example.py -o flowchart.svg
 
 好吧，我想如果写一个 PyFlowchart 的 **GUI** 可能会很了不起。把你的代码粘贴进去，流程图 DSL 就会及时生成，流程图也会显示在一边，非常方便。
 
-- [ ] ~~The Chinese README your buddies waiting for!~~ 希望有同学帮助改进这个中文 README 呀。（现在这个大部分都是机翻，但是我校过，应该勉强能看）
+- [ ] ~~The Chinese README your buddies waiting for!~~ 希望有同学帮助改进这个中文 README 呀。（现在这个大部分都是机翻，但是我校过，应该勉强能看）（我是不同于前一个括号的第二名翻译，更新后缺少了一些东西，常用的部分我进行了翻译，进阶部分等我有空再翻，已经把缺少部分用英文填充）
 - [x] 自动化测试。
 
 ----
@@ -347,6 +393,6 @@ Sadly, I am too busy (pronounced as `[ˈlеizi]`——lazy) to code these ideas.
 
 ## License
 
-Copyright ©️ 2020-2022 CDFMLR. All rights reserved.
+Copyright ©️ 2020-2023 CDFMLR. All rights reserved.
 
 Licensed under the MIT License.
