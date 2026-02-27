@@ -97,7 +97,7 @@ class FunctionDefStart(AstNode, StartNode):
     standing for the start of a function.
     """
 
-    def __init__(self, ast_function_def: _ast.FunctionDef, **kwargs):
+    def __init__(self, ast_function_def: _ast.stmt, **kwargs):
         AstNode.__init__(self, ast_function_def, **kwargs)
         StartNode.__init__(self, ast_function_def.name)
 
@@ -108,7 +108,7 @@ class FunctionDefEnd(AstNode, EndNode):
      standing for the end of a function.
     """
 
-    def __init__(self, ast_function_def: _ast.FunctionDef, **kwargs):
+    def __init__(self, ast_function_def: _ast.stmt, **kwargs):
         AstNode.__init__(self, ast_function_def, **kwargs)
         EndNode.__init__(self, ast_function_def.name)
 
@@ -119,13 +119,13 @@ class FunctionDefArgsInput(AstNode, InputOutputNode):
     standing for the args (input) of a function.
     """
 
-    def __init__(self, ast_function_def: _ast.FunctionDef, **kwargs):
+    def __init__(self, ast_function_def: _ast.stmt, **kwargs):
         AstNode.__init__(self, ast_function_def, **kwargs)
         InputOutputNode.__init__(self, InputOutputNode.INPUT, self.func_args_str())
 
     def func_args_str(self):
         # TODO(important): handle defaults, vararg, kwonlyargs, kw_defaults, kwarg
-        assert isinstance(self.ast_object, _ast.FunctionDef) or \
+        assert isinstance(self.ast_object, (_ast.FunctionDef, _ast.AsyncFunctionDef)) or \
                hasattr(self.ast_object, "args")
         args = []
         for arg in self.ast_object.args.args:
@@ -141,7 +141,7 @@ class FunctionDef(NodesGroup, AstNode):
     This class is a NodesGroup with FunctionDefStart & FunctionDefArgsInput & function-body & FunctionDefEnd.
     """
 
-    def __init__(self, ast_func: _ast.FunctionDef, **kwargs):  # _ast.For | _ast.While
+    def __init__(self, ast_func: _ast.stmt, **kwargs):  # _ast.FunctionDef | _ast.AsyncFunctionDef
         """
         FunctionDef.__init__ makes a NodesGroup object with following Nodes chain:
             FunctionDef -> FunctionDefStart -> FunctionDefArgsInput -> [function-body] -> FunctionDefEnd
@@ -175,7 +175,7 @@ class FunctionDef(NodesGroup, AstNode):
             - body_head
             - body_tails
         """
-        assert isinstance(self.ast_object, _ast.FunctionDef) or \
+        assert isinstance(self.ast_object, (_ast.FunctionDef, _ast.AsyncFunctionDef)) or \
                hasattr(self.ast_object, "body")
         p = parse(self.ast_object.body, **kwargs)
         return p.head, p.tails
@@ -254,14 +254,12 @@ class Loop(NodesGroup, AstNode):
         """
         Parse and Connect loop-body (a node graph) to self.cond_node (LoopCondition), extend `self.tails` with tails got.
         """
-        assert isinstance(self.ast_object, _ast.For) or \
-               isinstance(self.ast_object, _ast.While) or \
+        assert isinstance(self.ast_object, (_ast.For, _ast.While, _ast.AsyncFor)) or \
                hasattr(self.ast_object, "body")
 
-        progress = parse(self.ast_object.body, **kwargs)
+        process = parse(self.ast_object.body, **kwargs)
 
-        if progress.head is not None:
-            process = parse(self.ast_object.body, **kwargs)
+        if process.head is not None:
             # head
             self.cond_node.connect_yes(process.head)
             # tails connect back to cond
@@ -559,7 +557,13 @@ class ReturnOutput(AstNode, InputOutputNode):
 
     def __init__(self, ast_return: _ast.Return, **kwargs):
         AstNode.__init__(self, ast_return, **kwargs)
-        InputOutputNode.__init__(self, InputOutputNode.OUTPUT, self.ast_to_source().lstrip("return"))
+        # ast_to_source() gives "return <value>" or bare "return".
+        # Strip the "return" keyword: use prefix removal to avoid lstrip()'s
+        # character-set semantics (lstrip("return") strips individual chars, not the word).
+        source = self.ast_to_source()
+        if source.startswith("return"):
+            source = source[len("return"):].lstrip()
+        InputOutputNode.__init__(self, InputOutputNode.OUTPUT, source)
 
 
 class ReturnEnd(AstNode, EndNode):
@@ -818,7 +822,7 @@ class Match(NodesGroup, AstNode):
             debug(f"Match.__init__() replace head: self.head before: {type(self.head)}: {self.head.__dict__}")
             self.head = self.head.connections[0].next_node
             debug(f"Match.__init__() replace head self.head after: {type(self.head)}: {self.head.__dict__}")
-        except IndexError or AttributeError:
+        except (IndexError, AttributeError):
             self.head = CommonOperation(ast_match)
             self.tails = [self.head]
 
@@ -912,8 +916,10 @@ __loop_stmts = {
 __ctrl_stmts = {
     _ast.Break: BreakContinueSubroutine,
     _ast.Continue: BreakContinueSubroutine,
+    _ast.Raise: BreakContinueSubroutine,
     _ast.Return: Return,
     _ast.Yield: YieldOutput,
+    _ast.YieldFrom: YieldOutput,
     _ast.Call: CallSubroutine,
 }
 

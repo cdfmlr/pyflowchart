@@ -570,6 +570,52 @@ cond3(no)->sub18
 '''
 
 
+def raise_test():
+    expr = '''
+x = 1
+raise ValueError('oops')
+y = 2
+    '''
+    expr_ast = ast.parse(expr)
+    p = parse(expr_ast.body)
+    flow = Flowchart(p.head).flowchart()
+    return flow
+
+
+EXPECTED_RAISE_TEST = '''
+op2=>operation: x = 1
+sub4=>subroutine: raise ValueError('oops')
+
+op2->sub4
+'''
+
+
+def yield_from_test():
+    expr = '''
+def gen(n):
+    yield from range(n)
+    yield from [1, 2, 3]
+    '''
+    expr_ast = ast.parse(expr)
+    p = parse(expr_ast.body)
+    flow = Flowchart(p.head).flowchart()
+    return flow
+
+
+EXPECTED_YIELD_FROM_TEST = '''
+st11=>start: start gen
+io13=>inputoutput: input: n
+io16=>inputoutput: output: yield from range(n)
+io18=>inputoutput: output: yield from [1, 2, 3]
+e20=>end: end gen
+
+st11->io13
+io13->io16
+io16->io18
+io18->e20
+'''
+
+
 class PyflowchartTestCase(unittest.TestCase):
     def assertEqualFlowchart(self, got: str, expected: str):
         return self.assertEqual(
@@ -660,6 +706,16 @@ class PyflowchartTestCase(unittest.TestCase):
         got = async_for_test()
         print(got)
         self.assertEqualFlowchart(got, EXPECTED_ASYNC_FOR_TEST)
+
+    def test_raise(self):
+        got = raise_test()
+        print(got)
+        self.assertEqualFlowchart(got, EXPECTED_RAISE_TEST)
+
+    def test_yield_from(self):
+        got = yield_from_test()
+        print(got)
+        self.assertEqualFlowchart(got, EXPECTED_YIELD_FROM_TEST)
 
 
 if __name__ == '__main__':
