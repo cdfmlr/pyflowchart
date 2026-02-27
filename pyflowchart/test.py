@@ -518,6 +518,58 @@ sub88->sub91
 '''
 
 
+def async_func_test():
+    expr = '''
+async def fetch(url, retries=3):
+    result = await get(url)
+    return result
+    '''
+    expr_ast = ast.parse(expr)
+    p = parse(expr_ast.body)
+    flow = Flowchart(p.head).flowchart()
+    return flow
+
+
+EXPECTED_ASYNC_FUNC_TEST = '''
+st3=>start: start fetch
+io5=>inputoutput: input: url, retries
+op8=>operation: result = await get(url)
+io13=>inputoutput: output:  result
+e11=>end: end function return
+
+st3->io5
+io5->op8
+op8->io13
+io13->e11
+'''
+
+
+def async_for_test():
+    expr = '''
+async for item in aiter():
+    print(item)
+    process(item)
+done()
+    '''
+    expr_ast = ast.parse(expr)
+    p = parse(expr_ast.body)
+    flow = Flowchart(p.head).flowchart()
+    return flow
+
+
+EXPECTED_ASYNC_FOR_TEST = '''
+cond3=>condition: async for item in aiter()
+sub12=>subroutine: print(item)
+sub14=>subroutine: process(item)
+sub18=>subroutine: done()
+
+cond3(yes)->sub12
+sub12->sub14
+sub14(left)->cond3
+cond3(no)->sub18
+'''
+
+
 class PyflowchartTestCase(unittest.TestCase):
     def assertEqualFlowchart(self, got: str, expected: str):
         return self.assertEqual(
@@ -598,6 +650,16 @@ class PyflowchartTestCase(unittest.TestCase):
         got = match_test()
         print(got)
         self.assertEqualFlowchart(got, EXPECTED_MATCH_TEST_PY_GE_310)
+
+    def test_async_func(self):
+        got = async_func_test()
+        print(got)
+        self.assertEqualFlowchart(got, EXPECTED_ASYNC_FUNC_TEST)
+
+    def test_async_for(self):
+        got = async_for_test()
+        print(got)
+        self.assertEqualFlowchart(got, EXPECTED_ASYNC_FOR_TEST)
 
 
 if __name__ == '__main__':

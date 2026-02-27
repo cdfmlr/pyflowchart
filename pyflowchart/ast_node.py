@@ -894,7 +894,8 @@ if sys.version_info < (3, 10):
 # TODO: Try, With
 
 __func_stmts = {
-    _ast.FunctionDef: FunctionDef
+    _ast.FunctionDef: FunctionDef,
+    _ast.AsyncFunctionDef: FunctionDef,
 }
 
 __cond_stmts = {
@@ -905,6 +906,7 @@ __cond_stmts = {
 __loop_stmts = {
     _ast.For: Loop,
     _ast.While: Loop,
+    _ast.AsyncFor: Loop,
 }
 
 __ctrl_stmts = {

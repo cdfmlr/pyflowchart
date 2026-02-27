@@ -23,5 +23,5 @@ setuptools.setup(
         "Topic :: Utilities",
     ],
     python_requires='>=3.6',
-    install_requires=['astunparse', 'chardet'],
+    install_requires=['astunparse; python_version < "3.9"', 'chardet'],
 )
