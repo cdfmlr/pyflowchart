@@ -40,7 +40,7 @@ def detect_decode(file_content: bytes) -> str:
     encoding = detect_result.get("encoding")
     confidence = detect_result.get("confidence")
 
-    if confidence < 0.9:
+    if not confidence or confidence < 0.9:
         encoding = "UTF-8"
 
     # decode file content by detected encoding

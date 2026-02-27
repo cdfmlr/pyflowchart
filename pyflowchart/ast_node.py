@@ -8,9 +8,8 @@ license that can be found in the LICENSE file.
 """
 
 import _ast
-import typing
 import warnings
-from typing import Tuple
+from typing import List, Tuple
 
 from pyflowchart.node import *
 
@@ -708,10 +707,10 @@ class MatchCase(NodesGroup, AstNode):
         self.parse_body(**kwargs)
 
     def parse_body(self, **kwargs) -> None:
-        assert isinstance(self.ast_object, _ast.match_case) or \
+        assert isinstance(self.ast_object, _ast_match_case_t) or \
                hasattr(self.ast_object, "body")
 
-        progress = parse(self.ast_object.body)
+        progress = parse(self.ast_object.body, **kwargs)
 
         if progress.head is not None:
             self.cond_node.connect_yes(progress.head)
@@ -801,11 +800,8 @@ class Match(NodesGroup, AstNode):
         # A Cond for match_case should be represented as "if {subject} match case {pattern}"
         self.subject = ast_match.subject
 
-        # self.head = TransparentNode(self)
-        # fuck the multi inheritance,,, my brain is buffer overflowing
-        # god bless the jetbrains helped me figure out this overstep
-        # well, never mind. I believe that NodesGroup.__init__()
-        # is the right way to set it up as well as self.head properly.
+        # NodesGroup.__init__() is the correct way to initialise the head here.
+        # The transparent_head acts as a placeholder until cases are parsed.
 
         # Each case is a condition node.
         # Since we have not parsed any case body, (nor I want to peek one),
@@ -835,7 +831,7 @@ class Match(NodesGroup, AstNode):
         """
         Parse and Connect cases of the match
         """
-        assert isinstance(self.ast_object, _ast.Match) or \
+        assert isinstance(self.ast_object, _ast_Match_t) or \
                hasattr(self.ast_object, "cases")
 
         last_case = self.head  # at first, it's a transparent node
@@ -959,11 +955,11 @@ def parse(ast_list: List[_ast.AST], **kwargs) -> ParseProcessGraph:
         ast_node_class = __special_stmts.get(type(ast_object), CommonOperation)
 
         # special case:  Match for Python 3.10+
-        if sys.version_info >= (3, 10) and type(ast_object) == _ast_Match_t:
+        if sys.version_info >= (3, 10) and isinstance(ast_object, _ast_Match_t):
             ast_node_class = Match
 
         # special case: special stmt as a expr value. e.g. function call
-        if type(ast_object) == _ast.Expr:
+        if isinstance(ast_object, _ast.Expr):
             if hasattr(ast_object, "value"):
                 ast_node_class = __special_stmts.get(type(ast_object.value), CommonOperation)
             else:  # ast_object has no value attribute

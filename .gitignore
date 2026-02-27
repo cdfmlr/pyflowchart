@@ -1,8 +1,6 @@
 dev_test
 
-# poetry & pyproject.toml based env is not ready & for internal experiment only.
-# keeps setup.py for a while.
-pyproject.toml
+# poetry lock file is not committed for a library; setup.py / pyproject.toml are the source of truth.
 poetry.lock
 
 .idea

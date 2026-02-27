@@ -717,6 +717,115 @@ class PyflowchartTestCase(unittest.TestCase):
         print(got)
         self.assertEqualFlowchart(got, EXPECTED_YIELD_FROM_TEST)
 
+    # ------------------------------------------------------------------ #
+    #  Tests for bug fixes                                                 #
+    # ------------------------------------------------------------------ #
+
+    def test_from_code_invalid_field_raises_value_error(self):
+        """from_code() must raise ValueError (not AssertionError) for a field
+        that does not exist in the given code.  Previously this was an assert
+        that was silently skipped under ``python -O``.
+        """
+        code = 'def foo(): pass'
+        with self.assertRaises(ValueError):
+            Flowchart.from_code(code, field='nonexistent')
+
+    def test_from_code_empty_raises_value_error(self):
+        """from_code() must raise ValueError when the parsed body is empty."""
+        with self.assertRaises(ValueError):
+            Flowchart.from_code('', field='', inner=True)
+
+    def test_find_field_invalid_path_returns_empty_body(self):
+        """find_field_from_ast() must return an AST node whose body is []
+        for a field path that does not exist.  This exercises the control-flow
+        branch that previously relied on a bare ``assert`` (broken under -O).
+        """
+        code_ast = ast.parse('def foo(): pass')
+        result = Flowchart.find_field_from_ast(code_ast, 'no.such.path')
+        self.assertEqual(result.body, [])
+
+    def test_detect_decode_utf8(self):
+        """detect_decode() must correctly decode plain UTF-8 bytes."""
+        from pyflowchart.__main__ import detect_decode
+        src = 'print("héllo")'
+        result = detect_decode(src.encode('utf-8'))
+        self.assertEqual(result, src)
+
+    def test_detect_decode_low_confidence_falls_back_to_utf8(self):
+        """detect_decode() must not crash and must fall back to UTF-8 when
+        chardet returns a low or zero confidence score (including when the
+        detected encoding is None — the historical TypeError bug).
+        """
+        from pyflowchart.__main__ import detect_decode
+        # Empty bytes: chardet returns encoding=None, confidence=0.0 —
+        # previously caused TypeError: '<' not supported between NoneType and float
+        result = detect_decode(b'')
+        self.assertEqual(result, '')
+        # Bytes that chardet is uncertain about should also not crash
+        result2 = detect_decode(b'\xff\xfe')
+        self.assertIsInstance(result2, str)
+
+    def test_public_api_all_complete(self):
+        """__all__ in pyflowchart/__init__.py must expose every public symbol
+        and must not leak internal helpers (time, uuid, itertools, List, …).
+        """
+        import pyflowchart
+
+        # All names declared in __all__ must actually be importable
+        for name in pyflowchart.__all__:
+            self.assertTrue(
+                hasattr(pyflowchart, name),
+                msg=f"'{name}' is in __all__ but not importable from pyflowchart",
+            )
+
+        # Key public symbols must be present
+        required = [
+            'Flowchart', 'Node', 'Connection', 'NodesGroup',
+            'StartNode', 'EndNode', 'OperationNode', 'InputOutputNode',
+            'SubroutineNode', 'ConditionNode', 'TransparentNode', 'CondYN',
+            'AstNode', 'FunctionDef', 'Loop', 'If', 'CommonOperation',
+            'CallSubroutine', 'BreakContinueSubroutine', 'YieldOutput', 'Return',
+            'Match', 'MatchCase', 'ParseProcessGraph', 'parse', 'output_html',
+        ]
+        for name in required:
+            self.assertIn(name, pyflowchart.__all__, msg=f"'{name}' missing from __all__")
+
+        # Internal names must not be re-exported
+        internal = ['time', 'uuid', 'itertools', 'debug', 'AsNode',
+                    'TypeVar', 'List', 'Optional', 'Tuple']
+        for name in internal:
+            self.assertNotIn(name, pyflowchart.__all__, msg=f"internal '{name}' leaked into __all__")
+
+    def test_match_simplify_kwarg_forwarded_into_case_bodies(self):
+        """simplify=False must propagate into match-case bodies so that nested
+        if-statements are *not* collapsed.  This was broken because parse() was
+        called without **kwargs inside MatchCase.parse_body().
+        """
+        if sys.version_info < (3, 10):
+            warnings.warn("match kwargs test requires python >= 3.10")
+            return
+
+        code = '''
+def fn(a, b):
+    match a:
+        case 1:
+            if b > 0:
+                print(b)
+'''
+        # With simplify=True the inner "if b > 0: print(b)" is collapsed into
+        # a single operation node; with simplify=False it stays as a condition
+        # node followed by a separate operation node.
+        fc_simplified = Flowchart.from_code(code, field='fn', simplify=True).flowchart()
+        fc_full = Flowchart.from_code(code, field='fn', simplify=False).flowchart()
+
+        cond_simplified = len(re.findall(r'=>condition:', fc_simplified))
+        cond_full = len(re.findall(r'=>condition:', fc_full))
+
+        self.assertGreater(
+            cond_full, cond_simplified,
+            msg="simplify=False should produce more condition nodes than simplify=True inside match-case bodies",
+        )
+
 
 if __name__ == '__main__':
     # print(flowchart_translate_test())

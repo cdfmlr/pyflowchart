@@ -95,8 +95,13 @@ class Flowchart(NodesGroup):
 
         field_ast = Flowchart.find_field_from_ast(code_ast, field)
 
-        assert hasattr(field_ast, "body")
-        assert field_ast.body, f"{field}: nothing to parse. Check given code and field please."
+        if not hasattr(field_ast, "body"):
+            raise ValueError(f"field {field!r} has no body.")
+        if not field_ast.body:
+            raise ValueError(
+                f"{field!r}: nothing to parse. "
+                "Check that the field path points to a valid function or class."
+            )
 
         f = field_ast.body if inner else [field_ast]
         p = parse(f, simplify=simplify, conds_align=conds_align)
@@ -147,11 +152,12 @@ class Flowchart(NodesGroup):
         field_list = field.split('.')
         try:
             for fd in field_list:
-                for ao in ast_obj.body:  # raises AttributeError: ast_obj along the field path has no body
+                for ao in ast_obj.body:  # raises AttributeError if ast_obj has no body
                     if hasattr(ao, 'name') and ao.name == fd:
                         ast_obj = ao
-            assert ast_obj.name == field_list[-1], "field not found"
-        except (AttributeError, AssertionError):
+            if not (hasattr(ast_obj, 'name') and ast_obj.name == field_list[-1]):
+                raise ValueError("field not found")
+        except (AttributeError, ValueError):
             ast_obj.body = []
 
         return ast_obj
