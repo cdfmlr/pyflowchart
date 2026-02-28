@@ -85,7 +85,7 @@ cond.connect_yes(io)
 cond.connect_no(sub)
 sub.connect(op, "right")  # sub->op line starts from the right of sub
 io.connect(e)
- 
+
 fc = Flowchart(st)
 print(fc.flowchart())
 ```
@@ -114,7 +114,7 @@ You can visit http://flowchart.js.org and paste the generated DSL to render an S
 
 ![screenshot on flowchart.js page](docs/imgs/flowchart-js-org.png)
 
-You can also call `pyflowchart.output_html` to generate an interactive HTML page (like the screenshot above):
+You can also call `pyflowchart.output_html` to generate a standalone HTML page with the rendered flowchart:
 
 ```python
 output_html('output.html', 'a_pyflow_test', fc.flowchart())
@@ -183,7 +183,7 @@ Or from Python:
 >>> from pyflowchart import Flowchart
 >>> with open('simple.py') as f:
 ...     code = f.read()
-... 
+...
 >>> fc = Flowchart.from_code(code)
 >>> print(fc.flowchart())
 

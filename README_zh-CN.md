@@ -112,7 +112,7 @@ sub4(right)->op1
 
 ![screenshot on flowchart.js page](docs/imgs/flowchart-js-org.png)
 
-也可以调用 `pyflowchart.output_html` 来生成如上图所示的交互式 HTML 页面：
+也可以调用 `pyflowchart.output_html` 来生成包含渲染后流程图的独立 HTML 页面：
 
 ```python
 output_html('output.html', 'a_pyflow_test', fc.flowchart())
