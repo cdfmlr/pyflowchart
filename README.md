@@ -393,26 +393,9 @@ except Exception as e? ──yes──▶ [handler body]
                           [finally body]
 ```
 
-Each `except` clause is rendered as a condition diamond. The `else` branch is taken when no exception is raised. All paths — handled exceptions, unhandled exceptions, and the no-exception path — converge into the `finally` block.
+Each `except` clause is rendered as a condition diamond. The `else` branch is taken when no exception is raised. All paths — handled exceptions, unhandled exceptions, and the no-exception path — converge into the `finally` block. When the `try` body contains multiple statements they are folded into a single operation node so that the `exception raised?` diamond covers the whole block; for clarity it is recommended to keep `try` bodies minimal (ideally a single statement).
 
 Python 3.11+ `except*` (ExceptionGroup) blocks are dispatched through the same mechanism.
-
-#### Multi-line try bodies
-
-When the `try` body contains **multiple statements**, each statement is rendered as a separate node (just like any other sequence of statements) — they are **not** folded into a single node:
-
-```python
-try:
-    a = setup()    # → operation node
-    b = process(a) # → operation node
-    c = finalize(b)# → operation node
-except ValueError:
-    handle()
-```
-
-This keeps the flowchart faithful to the code, but can produce large, hard-to-read diagrams when the `try` body is complex.
-
-> 💡 **Recommendation:** For clarity, apply `try`/`except` to a **minimal, ideally single-statement** atomic block rather than wrapping large sections of code. A `try` block that guards one operation is both better Python style and produces a cleaner flowchart.
 
 ### output html and images
 

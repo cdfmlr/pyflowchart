@@ -947,15 +947,26 @@ class Try(NodesGroup, AstNode):
         self.exc_cond = TryExceptCondition()
 
         # parse try body
-        try_body = parse(ast_try.body, **kwargs)
-
-        if try_body.head is not None:
-            NodesGroup.__init__(self, try_body.head)
-            for tail in try_body.tails:
-                if isinstance(tail, Node):
-                    tail.connect(self.exc_cond)
+        # When there are multiple statements in the try body we fold them into a
+        # single OperationNode.  Expanding them as separate nodes would only
+        # connect the *last* statement to the "exception raised?" diamond,
+        # leaving all preceding statements outside the exception-handling scope.
+        if len(ast_try.body) > 1:
+            body_text = '\n'.join(
+                astunparse.unparse(stmt).strip() for stmt in ast_try.body
+            )
+            try_body_node = OperationNode(body_text)
+            NodesGroup.__init__(self, try_body_node)
+            try_body_node.connect(self.exc_cond)
         else:
-            NodesGroup.__init__(self, self.exc_cond)
+            try_body = parse(ast_try.body, **kwargs)
+            if try_body.head is not None:
+                NodesGroup.__init__(self, try_body.head)
+                for tail in try_body.tails:
+                    if isinstance(tail, Node):
+                        tail.connect(self.exc_cond)
+            else:
+                NodesGroup.__init__(self, self.exc_cond)
 
         # yes-path: except handlers (chained)
         self._parse_handlers(ast_try.handlers, **kwargs)
