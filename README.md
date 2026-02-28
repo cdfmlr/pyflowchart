@@ -35,7 +35,7 @@ PyFlowchart will print the generated flowchart.js DSL to stdout. You can paste t
 
 ```sh
 $ python -m pyflowchart example.py -o example.html
-$ open example.html  # macOS; or open it manually in your browser
+$ open example.html  # or open it manually in your browser
 ```
 
 **To flowchart a specific function or method:**
