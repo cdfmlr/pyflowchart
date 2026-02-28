@@ -44,6 +44,8 @@ $ python -m pyflowchart example.py -f function_name
 $ python -m pyflowchart example.py -f ClassName.method_name
 ```
 
+例如：`python -m pyflowchart example.py -f MyClass.add`。
+
 🎉 现在，你已经准备好享受流程图的制作了。
 
 继续阅读本文件以了解更多用法。
