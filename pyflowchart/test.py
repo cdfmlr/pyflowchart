@@ -774,6 +774,44 @@ cond55(no)->cond51
 '''
 
 
+def try_multiline_body_test():
+    """Multiple statements in the try body are each expanded as separate nodes.
+
+    The try body is NOT folded into a single operation node.  Each statement
+    becomes its own node (operation, subroutine, …), connected in sequence,
+    and the last node feeds into the "exception raised?" condition diamond.
+    This mirrors how any ordinary statement sequence is rendered.
+    """
+    expr = '''
+try:
+    a = setup()
+    b = process(a)
+    c = finalize(b)
+except ValueError:
+    handle()
+    '''
+    expr_ast = ast.parse(expr)
+    p = parse(expr_ast.body)
+    flow = Flowchart(p.head).flowchart()
+    return flow
+
+
+EXPECTED_TRY_MULTILINE_BODY_TEST = '''
+op5=>operation: a = setup()
+op7=>operation: b = process(a)
+op9=>operation: c = finalize(b)
+cond2=>condition: exception raised?
+cond11=>condition: except ValueError
+sub15=>subroutine: handle()
+
+op5->op7
+op7->op9
+op9->cond2
+cond2(yes)->cond11
+cond11(yes)->sub15
+'''
+
+
 class PyflowchartTestCase(unittest.TestCase):
     def assertEqualFlowchart(self, got: str, expected: str):
         return self.assertEqual(
@@ -902,6 +940,12 @@ class PyflowchartTestCase(unittest.TestCase):
         got = try_in_loop_test()
         print(got)
         self.assertEqualFlowchart(got, EXPECTED_TRY_IN_LOOP_TEST)
+
+    def test_try_multiline_body(self):
+        """Multiple statements in try body each expand into separate nodes (not folded)."""
+        got = try_multiline_body_test()
+        print(got)
+        self.assertEqualFlowchart(got, EXPECTED_TRY_MULTILINE_BODY_TEST)
 
     # ------------------------------------------------------------------ #
     #  Tests for bug fixes                                                 #
