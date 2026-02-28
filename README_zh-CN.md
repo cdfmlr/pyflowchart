@@ -200,7 +200,7 @@ Flowchart.from_code(code, field="", inner=True, simplify=True, conds_align=False
 - `field`: 目标函数或方法的点分路径（例如 `"MyClass.my_method"`）。默认为 `""`（整个文件）。
 - `inner`: 若为 `True`，解析 field 的*函数体*；若为 `False`，将整个 field 作为单一节点处理。
 - `simplify`: 若为 `True`，只有一行函数体的 `if`/循环语句会被折叠成单一节点。
-- `conds_align`: 若为 `True`，连续的 `if` 语句会在流程图中水平对齐。
+- `conds_align`: 若为 `True`，连续的 `if` 语句会在流程图中对齐排列（水平或垂直，取决于布局）。
 
 CLI 与此函数一一对应：
 
@@ -211,7 +211,7 @@ python -m pyflowchart [-f FIELD] [-i] [--no-simplify] [--conds-align] [-o OUTPUT
 - `-f FIELD`: 目标 field 的点分路径。
 - `-i`: 解析 field 的函数体（`inner=True`）。
 - `--no-simplify`: 禁用单行函数体简化。
-- `--conds-align`: 启用连续 if 语句水平对齐。
+- `--conds-align`: 启用连续 if 语句对齐排列。
 - `-o OUTPUT`: 将结果写入文件。目前仅支持 `.html` / `.htm`（由 `output_html` 处理）。
 
 ### field
@@ -357,15 +357,15 @@ $ python -m pyflowchart example.py -o output.html
 
 ![output-html](docs/imgs/output-html.png)
 
-在浏览器中打开 `output.html` 即可查看交互式流程图。你可以在文本框中编辑 DSL，点击 **Run** 刷新图表，还提供了 `.svg` 和 `.png` 的下载链接。
+在浏览器中打开 `output.html` 即可可视化流程图。你可以修改代码并点击 **Run** 更新图表，还提供了 `.svg` 和 `.png` 的下载链接。
 
 ⚠️ 指定的输出文件如果已存在，将会被覆盖。
 
-如果想在 Python 中而非 CLI 中使用此功能：
+🐍 如需通过 Python 而非 CLI 使用此功能，调用 `output_html(output_name: str, field_name: str, flowchart: str) -> None`：
 
-```python
-from pyflowchart import output_html
-output_html(output_name="output.html", field_name="classify", flowchart=fc.flowchart())
+```py
+>>> import pyflowchart
+>>> help(pyflowchart.output_html)
 ```
 
 ## 美化生成的流程图
@@ -407,6 +407,6 @@ $ pyflowchart example.py -o flowchart.svg
 
 ## License
 
-Copyright ©️ 2020-2024 CDFMLR. All rights reserved.
+Copyright 2020-2026 CDFMLR. All rights reserved.
 
 Licensed under the MIT License.

@@ -204,7 +204,7 @@ Flowchart.from_code(code, field="", inner=True, simplify=True, conds_align=False
 - `field`: Dotted path to a specific function or method (e.g. `"MyClass.my_method"`). Defaults to `""` (the entire file).
 - `inner`: If `True`, parse the *body* of the field. If `False`, treat the field itself as a single node.
 - `simplify`: If `True`, a one-line `if`/`loop` body is collapsed into a single node.
-- `conds_align`: If `True`, consecutive `if` statements are aligned horizontally in the flowchart.
+- `conds_align`: If `True`, consecutive `if` statements are aligned in the flowchart (horizontally or vertically, depending on the layout).
 
 The CLI mirrors this interface:
 
