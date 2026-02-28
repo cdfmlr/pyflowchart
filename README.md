@@ -351,6 +351,52 @@ def classify(status):
 $ python -m pyflowchart example_match.py -f classify
 ```
 
+### try/except/else/finally (Beta)
+
+> ⚠️ **Beta feature:** `try`/`except` support is still in beta and may not work correctly in all cases.
+
+PyFlowchart translates `try`/`except`/`else`/`finally` blocks into a structured flowchart that shows all exception-handling paths.
+
+```python
+# example_try.py
+def fetch(url):
+    try:
+        data = requests.get(url)
+    except Timeout:
+        data = cached()
+    except Exception as e:
+        log(e)
+    else:
+        process(data)
+    finally:
+        close()
+```
+
+```sh
+$ python -m pyflowchart example_try.py -f fetch
+```
+
+The generated flowchart represents the following structure:
+
+```
+[try body]
+    ↓
+exception raised? ──no──▶ [else body]
+    │ yes                       │
+    ▼                           │
+except Timeout? ──yes──▶ [handler body]
+    │ no                        │
+except Exception as e? ──yes──▶ [handler body]
+    │ no (unhandled)            │
+    └──────────────────────────►┤
+                                ▼
+                          [finally body]
+```
+
+Each `except` clause is rendered as a condition diamond. The `else` branch is taken when no exception is raised. All paths — handled exceptions, unhandled exceptions, and the no-exception path — converge into the `finally` block.
+
+Python 3.11+ `except*` (ExceptionGroup) blocks are dispatched through the same mechanism.
+
 ### output html and images
 
 Pass `-o output.html` to write the flowchart directly to an HTML file:

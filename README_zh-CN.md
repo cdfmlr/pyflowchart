@@ -349,6 +349,52 @@ def classify(status):
 $ python -m pyflowchart example_match.py -f classify
 ```
 
+### try/except/else/finally（Beta）
+
+> ⚠️ **Beta 功能：** `try`/`except` 支持仍处于测试阶段，在某些情况下可能无法正常工作。
+
+PyFlowchart 将 `try`/`except`/`else`/`finally` 语句块翻译为结构化流程图，呈现所有异常处理路径。
+
+```python
+# example_try.py
+def fetch(url):
+    try:
+        data = requests.get(url)
+    except Timeout:
+        data = cached()
+    except Exception as e:
+        log(e)
+    else:
+        process(data)
+    finally:
+        close()
+```
+
+```sh
+$ python -m pyflowchart example_try.py -f fetch
+```
+
+生成的流程图结构如下：
+
+```
+[try 语句体]
+    ↓
+是否发生异常？──否──▶ [else 语句体]
+    │ 是                    │
+    ▼                       │
+except Timeout？──是──▶ [处理代码]
+    │ 否                    │
+except Exception as e？──是──▶ [处理代码]
+    │ 否（未处理）           │
+    └──────────────────────►┤
+                            ▼
+                      [finally 语句体]
+```
+
+每个 `except` 子句被渲染为一个条件菱形节点。当没有异常被触发时，走 `else` 分支。无论是已处理异常、未处理异常还是无异常路径，最终都会汇聚到 `finally` 块。
+
+Python 3.11+ 的 `except*`（ExceptionGroup）块也通过相同机制处理。
+
 ### 输出 HTML 与图片
 
 传入 `-o output.html` 可将流程图直接写入 HTML 文件：
