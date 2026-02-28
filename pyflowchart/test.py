@@ -721,7 +721,7 @@ class PyflowchartTestCase(unittest.TestCase):
     #  Tests for bug fixes                                                 #
     # ------------------------------------------------------------------ #
 
-    def test_from_code_invalid_field_raises_value_error(self):
+    def test_invalid_field_raises(self):
         """from_code() must raise ValueError (not AssertionError) for a field
         that does not exist in the given code.  Previously this was an assert
         that was silently skipped under ``python -O``.
@@ -730,12 +730,12 @@ class PyflowchartTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             Flowchart.from_code(code, field='nonexistent')
 
-    def test_from_code_empty_raises_value_error(self):
+    def test_empty_code_raises(self):
         """from_code() must raise ValueError when the parsed body is empty."""
         with self.assertRaises(ValueError):
             Flowchart.from_code('', field='', inner=True)
 
-    def test_find_field_invalid_path_returns_empty_body(self):
+    def test_find_field_invalid(self):
         """find_field_from_ast() must return an AST node whose body is []
         for a field path that does not exist.  This exercises the control-flow
         branch that previously relied on a bare ``assert`` (broken under -O).
@@ -751,7 +751,7 @@ class PyflowchartTestCase(unittest.TestCase):
         result = detect_decode(src.encode('utf-8'))
         self.assertEqual(result, src)
 
-    def test_detect_decode_low_confidence_falls_back_to_utf8(self):
+    def test_detect_decode_low_confidence(self):
         """detect_decode() must not crash and must fall back to UTF-8 when
         chardet returns a low or zero confidence score (including when the
         detected encoding is None — the historical TypeError bug).
