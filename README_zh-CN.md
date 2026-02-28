@@ -310,7 +310,7 @@ print(flowchart.flowchart())
 
 ### conds-align（Beta）
 
-`conds_align=True` 时，连续的 `if` 语句会在流程图中水平排列，通常能让图表更易读。
+`conds_align=True` 时，连续的 `if` 语句会在流程图中对齐排列（水平或垂直，取决于布局），通常能让图表更易读。
 
 ```python
 # example-conds-align.py

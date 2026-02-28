@@ -314,7 +314,7 @@ print(flowchart.flowchart())
 
 ### conds-align (Beta)
 
-When `conds_align=True`, consecutive `if` statements are laid out horizontally, which often makes the resulting diagram easier to read.
+When `conds_align=True`, consecutive `if` statements are aligned in the flowchart (horizontally or vertically, depending on the layout), which often makes the resulting diagram easier to read.
 
 ```python
 # example-conds-align.py
@@ -361,15 +361,15 @@ $ python -m pyflowchart example.py -o output.html
 
 ![output-html](docs/imgs/output-html.png)
 
-Open `output.html` in your browser to view the interactive diagram. You can edit the flowchart DSL in the text area and click **Run** to refresh the diagram. Download links for `.svg` and `.png` exports are also provided.
+Open `output.html` in your browser to visualize the flowchart. You can tweak the code and click **Run** to update the diagram. Download links for `.svg` and `.png` exports are also provided.
 
 ⚠️ The specified output file will be overwritten if it already exists.
 
-To use this feature from Python instead of the CLI:
+🐍 To use this feature via Python instead of CLI, call `output_html(output_name: str, field_name: str, flowchart: str) -> None`:
 
-```python
-from pyflowchart import output_html
-output_html(output_name="output.html", field_name="classify", flowchart=fc.flowchart())
+```py
+>>> import pyflowchart
+>>> help(pyflowchart.output_html)
 ```
 
 ## Beautify Flowcharts
@@ -409,6 +409,6 @@ Unfortunately, I am too busy (pronounced as `[ˈlеizi]`——lazy) to code thes
 
 ## License
 
-Copyright 2020-2024 CDFMLR. All rights reserved.
+Copyright 2020-2026 CDFMLR. All rights reserved.
 
 Licensed under the MIT License.
