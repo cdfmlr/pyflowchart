@@ -665,6 +665,115 @@ cond18(no)->sub27
 '''
 
 
+def try_full_test():
+    """try / multiple except / else / finally — all four clauses present."""
+    expr = '''
+try:
+    result = fetch()
+except Timeout:
+    result = cached()
+except Exception as e:
+    log(e)
+else:
+    process(result)
+finally:
+    close()
+    '''
+    expr_ast = ast.parse(expr)
+    p = parse(expr_ast.body)
+    flow = Flowchart(p.head).flowchart()
+    return flow
+
+
+EXPECTED_TRY_FULL_TEST = '''
+op5=>operation: result = fetch()
+cond2=>condition: exception raised?
+cond7=>condition: except Timeout
+op11=>operation: result = cached()
+sub26=>subroutine: close()
+cond13=>condition: except Exception as e
+sub17=>subroutine: log(e)
+sub22=>subroutine: process(result)
+
+op5->cond2
+cond2(yes)->cond7
+cond7(yes)->op11
+op11->sub26
+cond7(no)->cond13
+cond13(yes)->sub17
+sub17->sub26
+cond13(no)->sub26
+cond2(no)->sub22
+sub22->sub26
+'''
+
+
+def try_in_sequence_test():
+    """do something -> try block -> other things (try is not the only statement)."""
+    expr = '''
+prepare()
+try:
+    result = fetch()
+except IOError:
+    result = default()
+use(result)
+    '''
+    expr_ast = ast.parse(expr)
+    p = parse(expr_ast.body)
+    flow = Flowchart(p.head).flowchart()
+    return flow
+
+
+EXPECTED_TRY_IN_SEQUENCE_TEST = '''
+sub30=>subroutine: prepare()
+op35=>operation: result = fetch()
+cond32=>condition: exception raised?
+cond37=>condition: except IOError
+op41=>operation: result = default()
+sub46=>subroutine: use(result)
+
+sub30->op35
+op35->cond32
+cond32(yes)->cond37
+cond37(yes)->op41
+op41->sub46
+cond37(no)->sub46
+cond32(no)->sub46
+'''
+
+
+def try_in_loop_test():
+    """try/except nested inside a for loop."""
+    expr = '''
+for item in items:
+    try:
+        process(item)
+    except ValueError:
+        skip(item)
+    '''
+    expr_ast = ast.parse(expr)
+    p = parse(expr_ast.body)
+    flow = Flowchart(p.head).flowchart()
+    return flow
+
+
+EXPECTED_TRY_IN_LOOP_TEST = '''
+cond51=>condition: for item in items
+sub58=>subroutine: process(item)
+cond55=>condition: exception raised?
+cond60=>condition: except ValueError
+sub64=>subroutine: skip(item)
+
+cond51(yes)->sub58
+sub58->cond55
+cond55(yes)->cond60
+cond60(yes)->sub64
+sub64->cond51
+cond60(no)->cond51
+cond55(no)->cond51
+'''
+
+
 class PyflowchartTestCase(unittest.TestCase):
     def assertEqualFlowchart(self, got: str, expected: str):
         return self.assertEqual(
@@ -775,6 +884,24 @@ class PyflowchartTestCase(unittest.TestCase):
         got = try_finally_test()
         print(got)
         self.assertEqualFlowchart(got, EXPECTED_TRY_FINALLY_TEST)
+
+    def test_try_full(self):
+        """try with multiple except handlers, an else clause, and finally."""
+        got = try_full_test()
+        print(got)
+        self.assertEqualFlowchart(got, EXPECTED_TRY_FULL_TEST)
+
+    def test_try_in_sequence(self):
+        """try block is preceded and followed by other statements."""
+        got = try_in_sequence_test()
+        print(got)
+        self.assertEqualFlowchart(got, EXPECTED_TRY_IN_SEQUENCE_TEST)
+
+    def test_try_in_loop(self):
+        """try/except nested inside a for loop."""
+        got = try_in_loop_test()
+        print(got)
+        self.assertEqualFlowchart(got, EXPECTED_TRY_IN_LOOP_TEST)
 
     # ------------------------------------------------------------------ #
     #  Tests for bug fixes                                                 #
