@@ -796,7 +796,7 @@ class PyflowchartTestCase(unittest.TestCase):
         for name in internal:
             self.assertNotIn(name, pyflowchart.__all__, msg=f"internal '{name}' leaked into __all__")
 
-    def test_match_simplify_kwarg_forwarded_into_case_bodies(self):
+    def test_match_kwargs_forwarded(self):
         """simplify=False must propagate into match-case bodies so that nested
         if-statements are *not* collapsed.  This was broken because parse() was
         called without **kwargs inside MatchCase.parse_body().

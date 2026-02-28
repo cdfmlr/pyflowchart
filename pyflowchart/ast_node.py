@@ -800,8 +800,9 @@ class Match(NodesGroup, AstNode):
         # A Cond for match_case should be represented as "if {subject} match case {pattern}"
         self.subject = ast_match.subject
 
-        # NodesGroup.__init__() is the correct way to initialise the head here.
-        # The transparent_head acts as a placeholder until cases are parsed.
+        # self.head = TransparentNode(self)
+        # Note: direct head assignment hits multi-inheritance MRO issues;
+        # NodesGroup.__init__() is the correct way to set self.head properly.
 
         # Each case is a condition node.
         # Since we have not parsed any case body, (nor I want to peek one),
