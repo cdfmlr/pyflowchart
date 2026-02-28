@@ -616,6 +616,55 @@ io18->e20
 '''
 
 
+def try_test():
+    expr = '''
+try:
+    risky_op()
+except ValueError:
+    handle()
+    '''
+    expr_ast = ast.parse(expr)
+    p = parse(expr_ast.body)
+    flow = Flowchart(p.head).flowchart()
+    return flow
+
+
+EXPECTED_TRY_TEST = '''
+sub5=>subroutine: risky_op()
+cond2=>condition: exception raised?
+cond7=>condition: except ValueError
+sub11=>subroutine: handle()
+
+sub5->cond2
+cond2(yes)->cond7
+cond7(yes)->sub11
+'''
+
+
+def try_finally_test():
+    expr = '''
+try:
+    risky_op()
+finally:
+    cleanup()
+    '''
+    expr_ast = ast.parse(expr)
+    p = parse(expr_ast.body)
+    flow = Flowchart(p.head).flowchart()
+    return flow
+
+
+EXPECTED_TRY_FINALLY_TEST = '''
+sub21=>subroutine: risky_op()
+cond18=>condition: exception raised?
+sub27=>subroutine: cleanup()
+
+sub21->cond18
+cond18(yes)->sub27
+cond18(no)->sub27
+'''
+
+
 class PyflowchartTestCase(unittest.TestCase):
     def assertEqualFlowchart(self, got: str, expected: str):
         return self.assertEqual(
@@ -717,6 +766,16 @@ class PyflowchartTestCase(unittest.TestCase):
         print(got)
         self.assertEqualFlowchart(got, EXPECTED_YIELD_FROM_TEST)
 
+    def test_try(self):
+        got = try_test()
+        print(got)
+        self.assertEqualFlowchart(got, EXPECTED_TRY_TEST)
+
+    def test_try_finally(self):
+        got = try_finally_test()
+        print(got)
+        self.assertEqualFlowchart(got, EXPECTED_TRY_FINALLY_TEST)
+
     # ------------------------------------------------------------------ #
     #  Tests for bug fixes                                                 #
     # ------------------------------------------------------------------ #
@@ -785,7 +844,8 @@ class PyflowchartTestCase(unittest.TestCase):
             'SubroutineNode', 'ConditionNode', 'TransparentNode', 'CondYN',
             'AstNode', 'FunctionDef', 'Loop', 'If', 'CommonOperation',
             'CallSubroutine', 'BreakContinueSubroutine', 'YieldOutput', 'Return',
-            'Match', 'MatchCase', 'ParseProcessGraph', 'parse', 'output_html',
+            'Match', 'MatchCase', 'Try', 'TryExceptCondition', 'ExceptHandlerCondition',
+            'ParseProcessGraph', 'parse', 'output_html',
         ]
         for name in required:
             self.assertIn(name, pyflowchart.__all__, msg=f"'{name}' missing from __all__")

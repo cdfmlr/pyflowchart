@@ -885,14 +885,161 @@ class Match(NodesGroup, AstNode):
 if sys.version_info < (3, 10):
     Match = CommonOperation
 
+
+###########
+#   Try   #
+###########
+
+class TryExceptCondition(ConditionNode):
+    """ConditionNode representing 'exception raised?' in a try/except block."""
+
+    def __init__(self):
+        ConditionNode.__init__(self, cond="exception raised?")
+
+    def fc_connection(self) -> str:
+        return ""
+
+
+class ExceptHandlerCondition(ConditionNode):
+    """ConditionNode for each except clause: 'except {ExcType}?'"""
+
+    def __init__(self, ast_handler: _ast.ExceptHandler):
+        ConditionNode.__init__(self, cond=self._cond_text(ast_handler))
+
+    @staticmethod
+    def _cond_text(handler: _ast.ExceptHandler) -> str:
+        if handler.type is None:
+            return "except"
+        type_name = astunparse.unparse(handler.type).strip()
+        if handler.name:
+            return f"except {type_name} as {handler.name}"
+        return f"except {type_name}"
+
+    def fc_connection(self) -> str:
+        return ""
+
+
+class Try(NodesGroup, AstNode):
+    """
+    Try is an AstNode for _ast.Try (try/except statements in Python source code).
+
+    Flowchart structure::
+
+        [try body]
+            ↓
+        exception raised? → no → [else body (if any)]
+            ↓ yes
+        except {Type1}? → yes → [handler1 body]
+            ↓ no
+        except {Type2}? → yes → [handler2 body]
+            ↓ no
+        (unhandled)
+
+        [finally body]  ← all paths converge here
+
+    Addresses: https://github.com/cdfmlr/pyflowchart/issues/18
+    """
+
+    def __init__(self, ast_try: _ast.Try, **kwargs):
+        AstNode.__init__(self, ast_try, **kwargs)
+
+        # "exception raised?" condition node
+        self.exc_cond = TryExceptCondition()
+
+        # parse try body
+        try_body = parse(ast_try.body, **kwargs)
+
+        if try_body.head is not None:
+            NodesGroup.__init__(self, try_body.head)
+            for tail in try_body.tails:
+                if isinstance(tail, Node):
+                    tail.connect(self.exc_cond)
+        else:
+            NodesGroup.__init__(self, self.exc_cond)
+
+        # yes-path: except handlers (chained)
+        self._parse_handlers(ast_try.handlers, **kwargs)
+
+        # no-path: else body (runs only when no exception was raised)
+        self._parse_else(ast_try.orelse, **kwargs)
+
+        # finally body — all current tails connect into it
+        self._parse_finally(ast_try.finalbody, **kwargs)
+
+    def _parse_handlers(self, handlers, **kwargs) -> None:
+        """Chain except handlers as nested condition nodes on the yes-path of exc_cond."""
+        if not handlers:
+            self.exc_cond.connect_yes(None)
+            self.append_tails(self.exc_cond.connection_yes.next_node)
+            return
+
+        connect_fn = self.exc_cond.connect_yes
+        last_handler_cond = None
+        for handler in handlers:
+            handler_cond = ExceptHandlerCondition(handler)
+            connect_fn(handler_cond)
+
+            body = parse(handler.body, **kwargs)
+            if body.head is not None:
+                handler_cond.connect_yes(body.head)
+                self.extend_tails(body.tails)
+            else:
+                handler_cond.connect_yes(None)
+                self.append_tails(handler_cond.connection_yes.next_node)
+
+            connect_fn = handler_cond.connect_no
+            last_handler_cond = handler_cond
+
+        # last handler's no-path: unhandled exception / implicit re-raise
+        if last_handler_cond is not None:
+            last_handler_cond.connect_no(None)
+            self.append_tails(last_handler_cond.connection_no.next_node)
+
+    def _parse_else(self, orelse, **kwargs) -> None:
+        """Parse the else clause (no-path of exc_cond: no exception raised)."""
+        if orelse:
+            else_proc = parse(orelse, **kwargs)
+            if else_proc.head is not None:
+                self.exc_cond.connect_no(else_proc.head)
+                self.extend_tails(else_proc.tails)
+                return
+
+        # no else body: virtual no-connection
+        self.exc_cond.connect_no(None)
+        self.append_tails(self.exc_cond.connection_no.next_node)
+
+    def _parse_finally(self, finalbody, **kwargs) -> None:
+        """Parse the finally clause — all current tails connect into it."""
+        if not finalbody:
+            return
+
+        finally_proc = parse(finalbody, **kwargs)
+        if finally_proc.head is None:
+            return
+
+        current_tails = list(self.tails)
+        self.tails = []
+        for tail in current_tails:
+            if isinstance(tail, Node):
+                tail.connect(finally_proc.head)
+        self.extend_tails(finally_proc.tails)
+
+
+# Python 3.11+ introduces TryStar for `except*` (exception groups).
+# Its AST structure mirrors _ast.Try, so we reuse the same handler.
+_ast_TryStar_t = _ast.AST  # placeholder for Python < 3.11
+if sys.version_info >= (3, 11):
+    _ast_TryStar_t = _ast.TryStar
+
+
 # Sentence: common | func | cond | loop | ctrl
 # - func: def
-# - cond: if
+# - cond: if, try
 # - loop: for, while
 # - ctrl: break, continue, return, yield, call
 # - common: others
 # Special sentence: cond | loop | ctrl
-# TODO: Try, With
+# TODO: With
 
 __func_stmts = {
     _ast.FunctionDef: FunctionDef,
@@ -901,7 +1048,9 @@ __func_stmts = {
 
 __cond_stmts = {
     _ast.If: If,
+    _ast.Try: Try,
     # _ast_Match_t: Match,  # need to check Python version, handle it later manually.
+    # _ast_TryStar_t: Try,  # need to check Python version, handle it later manually.
 }
 
 __loop_stmts = {
@@ -958,6 +1107,10 @@ def parse(ast_list: List[_ast.AST], **kwargs) -> ParseProcessGraph:
         # special case:  Match for Python 3.10+
         if sys.version_info >= (3, 10) and isinstance(ast_object, _ast_Match_t):
             ast_node_class = Match
+
+        # special case: TryStar (`except*`) for Python 3.11+
+        if sys.version_info >= (3, 11) and isinstance(ast_object, _ast_TryStar_t):
+            ast_node_class = Try
 
         # special case: special stmt as a expr value. e.g. function call
         if isinstance(ast_object, _ast.Expr):
