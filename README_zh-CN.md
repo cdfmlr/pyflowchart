@@ -33,7 +33,7 @@ PyFlowchart 将把生成的 flowchart.js DSL 打印到标准输出。进入 [flo
 
 ```sh
 $ python -m pyflowchart example.py -o example.html
-$ # 用浏览器打开 example.html
+$ open example.html  # macOS；或在浏览器中手动打开
 ```
 
 **指定要流程图化的函数或方法：**
